@@ -1,0 +1,949 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AIRLINER 여객기 백과사전</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<style>
+@property --a{syntax:'<angle>';initial-value:0deg;inherits:false}
+:root{
+  --bg:#04060d;--panel:#0a1020;--line:#ffffff14;--ink:#e9eef8;--sub:#8d99b3;--dim:#5a6680;
+  --c1:#2ee6ff;--c2:#3a7bff;--c3:#9b5cff;--c4:#ffb347;--ok:#3dffa8;--bad:#ff5c7a;
+  --grad:conic-gradient(from var(--a),var(--c1),var(--c2),var(--c3),var(--c4),var(--c1));
+  --hud:'Rajdhani',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--ink);overflow-x:hidden;
+  background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px);background-size:64px 64px;background-attachment:fixed}
+.wrap{max-width:1240px;margin:0 auto;padding:0 20px}
+.hud{font-family:var(--hud);letter-spacing:.12em;text-transform:uppercase}
+#prog{position:fixed;top:0;left:0;height:3px;width:0;z-index:99;background:linear-gradient(90deg,var(--c1),var(--c3),var(--c4));box-shadow:0 0 12px var(--c1)}
+
+/* NAV */
+nav{position:fixed;top:0;left:0;right:0;z-index:60;transition:background .3s}
+nav.solid{background:#04060dd9;backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+nav .wrap{display:flex;align-items:center;gap:4px;height:62px;overflow-x:auto;scrollbar-width:none}
+nav .logo{font-family:var(--hud);font-weight:700;font-size:20px;letter-spacing:.2em;margin-right:18px;white-space:nowrap}
+nav .logo b{color:var(--c1)}
+nav a{font-size:13px;font-weight:700;color:var(--sub);text-decoration:none;padding:8px 12px;border-radius:8px;white-space:nowrap;transition:.2s}
+nav a span{font-family:var(--hud);color:var(--dim);margin-right:5px}
+nav a:hover,nav a.on{color:#fff;background:#ffffff10}
+nav a.on span{color:var(--c1)}
+
+/* GLOW BORDER */
+.glow{position:relative;border-radius:18px;isolation:isolate}
+.glow::before{content:"";position:absolute;inset:-1.5px;border-radius:inherit;background:var(--grad);animation:spin 6s linear infinite;z-index:-1;opacity:.55;transition:opacity .3s}
+.glow::after{content:"";position:absolute;inset:-2px;border-radius:inherit;background:var(--grad);animation:spin 6s linear infinite;z-index:-2;filter:blur(22px);opacity:0;transition:opacity .3s}
+.glow:hover::before,.glow.hot::before{opacity:1}
+.glow:hover::after,.glow.hot::after{opacity:.55}
+.glow>.in{position:relative;height:100%;border-radius:17px;background:linear-gradient(165deg,#0e1730 0%,#070b17 75%);overflow:hidden}
+@keyframes spin{to{--a:360deg}}
+
+/* HERO */
+.hero{position:relative;height:100vh;min-height:640px;overflow:hidden;
+  background:linear-gradient(180deg,#02040b 0%,#061433 30%,#123a73 58%,#3d5d92 72%,#c9805e 90%,#f0b27a 100%)}
+.hero canvas{position:absolute;inset:0;width:100%;height:100%;cursor:grab}
+.hero canvas:active{cursor:grabbing}
+.hero .shade{position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at 30% 80%,#04060dcc,transparent 60%),linear-gradient(0deg,var(--bg) 0%,transparent 22%)}
+.corner{position:absolute;width:44px;height:44px;border:2px solid var(--c1);opacity:.7;pointer-events:none}
+.corner.tl{top:84px;left:24px;border-right:0;border-bottom:0}.corner.tr{top:84px;right:24px;border-left:0;border-bottom:0}
+.corner.bl{bottom:24px;left:24px;border-right:0;border-top:0}.corner.br{bottom:24px;right:24px;border-left:0;border-top:0}
+.hcopy{position:absolute;left:0;right:0;bottom:90px;pointer-events:none}
+.hcopy .wrap>*{pointer-events:auto}
+.tag{display:inline-flex;gap:10px;align-items:center;font-family:var(--hud);font-weight:600;letter-spacing:.25em;font-size:13px;color:var(--c1)}
+.tag::before{content:"";width:28px;height:2px;background:var(--c1)}
+.hero h1{font-size:clamp(42px,7.2vw,96px);font-weight:900;line-height:1.02;letter-spacing:-.03em;margin:16px 0 18px;text-shadow:0 10px 40px #000a}
+.hero h1 em{font-style:normal;background:linear-gradient(90deg,#fff,var(--c1) 40%,var(--c4));-webkit-background-clip:text;background-clip:text;color:transparent}
+.hero p.lead{max-width:540px;color:#c6d0e6;font-size:17px;line-height:1.75}
+.models{display:flex;gap:8px;flex-wrap:wrap;margin-top:24px}
+.mbtn{cursor:pointer;font-family:var(--hud);font-weight:700;letter-spacing:.1em;font-size:14px;color:#cfe3ff;background:#0a1328b3;border:1px solid #ffffff2a;padding:9px 16px;border-radius:10px;backdrop-filter:blur(6px);transition:.2s}
+.mbtn:hover{border-color:var(--c1);color:#fff}
+.mbtn.on{background:linear-gradient(90deg,#2ee6ff33,#9b5cff33);border-color:var(--c1);color:#fff;box-shadow:0 0 20px #2ee6ff55}
+.readout{position:absolute;top:104px;right:44px;display:grid;gap:10px;text-align:right;pointer-events:none}
+.readout div{font-family:var(--hud);font-size:12px;letter-spacing:.2em;color:#9fb6da}
+.readout b{display:block;font-size:30px;letter-spacing:.04em;color:#fff;font-weight:600;text-shadow:0 0 18px #2ee6ff88}
+.readout .nm{font-size:13px;color:var(--c1)}
+.drag{position:absolute;bottom:34px;right:50px;font-family:var(--hud);letter-spacing:.2em;font-size:12px;color:#ffffffaa;pointer-events:none}
+.scrollhint{position:absolute;bottom:30px;left:50%;transform:translateX(-50%);width:24px;height:38px;border:2px solid #ffffff66;border-radius:14px;pointer-events:none}
+.scrollhint::after{content:"";position:absolute;left:50%;top:7px;width:3px;height:8px;margin-left:-1.5px;border-radius:2px;background:#fff;animation:sh 1.6s infinite}
+@keyframes sh{to{transform:translateY(12px);opacity:0}}
+
+/* SECTIONS */
+section{padding:110px 0 40px;position:relative}
+.sh{display:grid;grid-template-columns:auto 1fr;gap:6px 28px;align-items:end;margin-bottom:40px}
+.sh .num{grid-row:span 2;font-family:var(--hud);font-weight:700;font-size:92px;line-height:.8;color:transparent;-webkit-text-stroke:1.5px #2ee6ff88}
+.sh h2{font-size:clamp(28px,4vw,44px);font-weight:900;letter-spacing:-.02em}
+.sh p{color:var(--sub);line-height:1.7;max-width:720px}
+.reveal{opacity:0;transform:perspective(900px) translateY(50px) rotateX(14deg);transition:opacity .9s,transform .9s cubic-bezier(.2,.8,.2,1)}
+.reveal.show{opacity:1;transform:none}
+
+/* TOOLS */
+.tools{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:26px}
+.chip{cursor:pointer;font:inherit;font-size:13px;font-weight:700;color:var(--sub);background:#ffffff08;border:1px solid var(--line);padding:9px 15px;border-radius:10px;transition:.2s}
+.chip:hover{color:#fff;border-color:#ffffff40}
+.chip.on{color:#04060d;background:var(--c1);border-color:var(--c1);box-shadow:0 0 18px #2ee6ff66}
+.inp{font:inherit;font-size:14px;color:#fff;background:#ffffff08;border:1px solid var(--line);padding:10px 14px;border-radius:10px;outline:none}
+.inp:focus{border-color:var(--c1)}
+.inp option{background:#0a1020}
+.tools .sp{flex:1}
+
+/* CARDS */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:22px;perspective:1400px}
+.card{cursor:pointer;transform-style:preserve-3d;transition:transform .15s ease-out}
+.card .in{padding:18px 18px 16px;display:flex;flex-direction:column;transform-style:preserve-3d}
+.card .light{position:absolute;inset:0;pointer-events:none;background:radial-gradient(circle at var(--mx,50%) var(--my,0%),#ffffff1f,transparent 50%);opacity:0;transition:opacity .3s}
+.card:hover .light{opacity:1}
+.ctop{display:flex;justify-content:space-between;align-items:center;transform:translateZ(30px)}
+.code{font-family:var(--hud);font-weight:700;font-size:15px;letter-spacing:.14em;color:var(--c1)}
+.st{font-family:var(--hud);font-weight:700;font-size:11px;letter-spacing:.14em;padding:3px 8px;border-radius:6px;border:1px solid}
+.st.live{color:var(--ok);border-color:#3dffa855}.st.ret{color:var(--bad);border-color:#ff5c7a55}.st.part{color:var(--c4);border-color:#ffb34755}
+.card .pic{height:150px;margin:6px -6px;display:grid;place-items:center;transform:translateZ(60px);
+  background:radial-gradient(ellipse at center,#2ee6ff14,transparent 70%)}
+.card .pic svg{height:140px;width:100%;transform:rotate(-14deg);transition:transform .5s cubic-bezier(.2,.8,.2,1);filter:drop-shadow(0 18px 18px #000c)}
+.card:hover .pic svg{transform:rotate(-22deg) scale(1.08) translateX(8px)}
+.card h3{font-size:21px;font-weight:900;transform:translateZ(40px)}
+.card .nick{font-size:13px;color:var(--sub);margin-top:3px;transform:translateZ(30px)}
+.spec3{display:grid;grid-template-columns:repeat(3,1fr);margin-top:14px;border-top:1px solid var(--line);padding-top:12px;transform:translateZ(25px)}
+.spec3 div{text-align:left}
+.spec3 b{display:block;font-family:var(--hud);font-size:22px;font-weight:600}
+.spec3 span{font-family:var(--hud);font-size:10px;letter-spacing:.14em;color:var(--dim)}
+.empty{grid-column:1/-1;text-align:center;color:var(--sub);padding:40px}
+
+/* MODAL */
+.modal{position:fixed;inset:0;z-index:100;display:none;place-items:center;padding:16px;background:#02040acc;backdrop-filter:blur(10px)}
+.modal.open{display:grid;animation:fi .3s}
+@keyframes fi{from{opacity:0}}
+.mbox{width:min(1100px,100%);max-height:92vh;animation:mp .55s cubic-bezier(.2,1.1,.3,1)}
+@keyframes mp{from{transform:perspective(1200px) rotateX(24deg) translateY(60px) scale(.9);opacity:0}}
+.mbox::before{opacity:1}
+.mbox .in{display:grid;grid-template-columns:1.15fr 1fr;max-height:92vh}
+.view{position:relative;min-height:420px;background:radial-gradient(ellipse at 50% 60%,#13305f,#060a16 70%)}
+.view canvas{position:absolute;inset:0;width:100%;height:100%;cursor:grab}
+.view .vlab{position:absolute;left:20px;top:18px;pointer-events:none}
+.view .vlab .code{font-size:13px}
+.view .vlab h3{font-size:34px;font-weight:900;margin-top:2px}
+.view .vlab .nick{color:var(--c4);font-weight:700;font-size:14px}
+.view .vhint{position:absolute;bottom:14px;left:20px;font-family:var(--hud);letter-spacing:.2em;font-size:11px;color:#ffffff88;pointer-events:none}
+.detail{padding:26px 26px 30px;overflow-y:auto}
+.close{position:absolute;top:14px;right:14px;z-index:3;width:38px;height:38px;border-radius:10px;border:1px solid #ffffff30;background:#0a1020cc;color:#fff;font-size:18px;cursor:pointer}
+.close:hover{border-color:var(--c1)}
+.tbl{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--line);border:1px solid var(--line);border-radius:12px;overflow:hidden;margin-bottom:18px}
+.tbl div{background:#0a1020;padding:10px 12px}
+.tbl span{display:block;font-family:var(--hud);font-size:10px;letter-spacing:.16em;color:var(--dim)}
+.tbl b{font-size:15px;font-weight:700}
+.sum{line-height:1.85;color:#d3dbec;font-size:15px}
+.lbl{font-family:var(--hud);font-weight:700;letter-spacing:.2em;font-size:12px;color:var(--c1);margin:22px 0 10px}
+.bars{display:grid;gap:10px}
+.bar label{display:flex;justify-content:space-between;font-size:13px;margin-bottom:5px;color:var(--sub)}
+.bar label b{color:#fff;font-family:var(--hud);font-size:15px;letter-spacing:.04em}
+.bar .t{height:6px;background:#ffffff10;border-radius:3px;overflow:hidden}
+.bar .f{height:100%;width:0;background:linear-gradient(90deg,var(--c2),var(--c1));box-shadow:0 0 10px var(--c1);transition:width 1.1s cubic-bezier(.2,.9,.3,1)}
+.facts{list-style:none;display:grid;gap:8px;counter-reset:f}
+.facts li{counter-increment:f;display:grid;grid-template-columns:34px 1fr;gap:6px;line-height:1.7;font-size:14px;color:#d3dbec;padding:10px 12px;background:#ffffff06;border:1px solid var(--line);border-radius:10px}
+.facts li::before{content:"0" counter(f);font-family:var(--hud);font-weight:700;color:var(--c4);font-size:16px}
+.note{margin-top:12px;padding:12px 14px;border-radius:10px;font-size:14px;line-height:1.7;border-left:3px solid var(--c3);background:#9b5cff14}
+.note b{color:#fff}
+
+/* COMPARE */
+.cmpbar{display:grid;grid-template-columns:1fr auto 1fr;gap:14px;align-items:center;margin-bottom:18px}
+.cmpbar select{width:100%}
+.cmpbar .vs{font-family:var(--hud);font-weight:700;font-size:26px;letter-spacing:.2em;color:var(--sub)}
+.sa{border-color:var(--c1)!important;color:var(--c1)!important}.sb{border-color:var(--c4)!important;color:var(--c4)!important}
+.bp{padding:16px;background:#071431}
+.bp svg{width:100%;height:auto;display:block;max-height:460px}
+.crows{padding:18px 22px 22px}
+.crow{display:grid;grid-template-columns:1fr 150px 1fr;gap:14px;align-items:center;padding:7px 0}
+.crow .l,.crow .r{height:8px;background:#ffffff0d;border-radius:4px;overflow:hidden;display:flex}
+.crow .l{justify-content:flex-end}
+.crow .l i{background:var(--c1);box-shadow:0 0 10px var(--c1)}.crow .r i{background:var(--c4);box-shadow:0 0 10px var(--c4)}
+.crow i{display:block;height:100%;border-radius:4px;transition:width .9s cubic-bezier(.2,.9,.3,1)}
+.crow .m{text-align:center;font-size:12px;color:var(--sub)}
+.crow .m b{display:flex;justify-content:center;gap:10px;font-family:var(--hud);font-size:16px;color:#fff;letter-spacing:.03em}
+.crow .m .wa{color:var(--c1)}.crow .m .wb{color:var(--c4)}
+
+/* PHYSICS */
+.phys{display:grid;grid-template-columns:1.35fr 1fr;gap:22px}
+.simsky{position:relative;height:360px;overflow:hidden;background:linear-gradient(180deg,#0b2a5c,#2c6bb3 60%,#7fb0dc)}
+.cl{position:absolute;height:40px;border-radius:40px;background:#ffffffb3;filter:blur(6px);animation:cl linear infinite}
+@keyframes cl{from{left:110%}to{left:-40%}}
+.sp1{position:absolute;height:1px;background:linear-gradient(90deg,transparent,#fff);animation:spd linear infinite;opacity:.5}
+@keyframes spd{from{left:110%}to{left:-30%}}
+#simplane{position:absolute;left:50%;width:300px;transform:translate(-50%,-50%);transition:top .5s ease-out,transform .5s ease-out;filter:drop-shadow(0 18px 14px #0006)}
+#simplane svg{width:100%}
+.arw{position:absolute;display:flex;align-items:center;gap:6px;font-family:var(--hud);font-weight:700;letter-spacing:.1em;font-size:12px;text-shadow:0 1px 4px #000;pointer-events:none;transition:all .4s}
+.arw i{display:block;border-radius:3px;transition:all .4s}
+.simctl{padding:18px 20px 20px;display:grid;gap:14px}
+.rng label{display:flex;justify-content:space-between;font-size:13px;font-weight:700;color:var(--sub);margin-bottom:6px}
+.rng label b{font-family:var(--hud);color:#fff;font-size:16px}
+input[type=range]{width:100%;accent-color:var(--c1)}
+.msg{font-weight:700;font-size:15px;padding:12px 14px;border-radius:10px;background:#ffffff08;border:1px solid var(--line)}
+.pfdwrap{padding:18px;display:flex;flex-direction:column;gap:14px}
+.pfd{width:100%;max-width:330px;margin:0 auto;display:block}
+.rd{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.rd div{background:#000;border:1px solid #ffffff1f;border-radius:8px;padding:8px 12px}
+.rd span{font-family:var(--hud);font-size:10px;letter-spacing:.18em;color:var(--dim);display:block}
+.rd b{font-family:var(--hud);font-size:24px;font-weight:600;color:var(--ok)}
+.rd b.warn{color:var(--bad)}
+.forces{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-top:22px}
+.fc .in{padding:16px 16px 18px}
+.fc h3{display:flex;align-items:baseline;gap:8px;font-size:19px;font-weight:900}
+.fc h3 small{font-family:var(--hud);letter-spacing:.14em;font-size:12px;font-weight:600}
+.fc .bar2{height:3px;border-radius:2px;margin:10px 0 12px}
+.fc p{font-size:13.5px;line-height:1.75;color:#c5cee2}
+.fc p.ex{color:var(--sub);margin-top:8px;font-size:13px}
+
+/* ANATOMY */
+.anat .in{display:grid;grid-template-columns:1.6fr 1fr}
+.bpv{background:#071431;background-image:linear-gradient(#2ee6ff12 1px,transparent 1px),linear-gradient(90deg,#2ee6ff12 1px,transparent 1px);background-size:24px 24px;padding:20px;display:grid;place-items:center}
+.bpv svg{width:100%;height:auto}
+.hs{cursor:pointer}
+.hs circle.o{fill:none;stroke:var(--c4);stroke-width:.25}
+.hs circle.c{fill:var(--c4)}
+.hs circle.o{animation:ping 1.8s infinite;transform-box:fill-box;transform-origin:center}
+@keyframes ping{0%{transform:scale(.6);opacity:1}100%{transform:scale(2.2);opacity:0}}
+.hs text{font-family:var(--hud);font-weight:700;letter-spacing:.06em;fill:#cfe3ff}
+.hs.on circle.c{fill:var(--c1)}.hs.on text{fill:var(--c1)}
+.pside{padding:24px;border-left:1px solid var(--line);display:flex;flex-direction:column}
+.pside .k{font-family:var(--hud);letter-spacing:.2em;font-size:12px;color:var(--c4)}
+.pside h3{font-size:30px;font-weight:900;margin:4px 0 12px}
+.pside p{line-height:1.85;color:#d3dbec;font-size:15px}
+.plist{display:flex;flex-wrap:wrap;gap:6px;margin-top:auto;padding-top:20px}
+
+/* PROFILE */
+.prof .in{padding:22px}
+.prof svg{width:100%;height:auto;display:block}
+.steps{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;margin-top:14px}
+.step{cursor:pointer;text-align:left;font:inherit;color:var(--sub);background:#ffffff06;border:1px solid var(--line);border-radius:10px;padding:10px 12px;transition:.2s}
+.step b{display:block;font-family:var(--hud);font-size:16px;letter-spacing:.1em;color:#fff}
+.step small{font-size:12px}
+.step.on{border-color:var(--c1);background:#2ee6ff14;box-shadow:inset 0 -3px 0 var(--c1)}
+.pinfo{display:grid;grid-template-columns:auto 1fr;gap:24px;align-items:center;margin-top:18px;padding:18px;border-radius:12px;background:#ffffff06;border:1px solid var(--line)}
+.pinfo .nums{display:flex;gap:20px}
+.pinfo .nums div span{display:block;font-family:var(--hud);font-size:10px;letter-spacing:.18em;color:var(--dim)}
+.pinfo .nums b{font-family:var(--hud);font-size:30px;font-weight:600;color:var(--c1)}
+.pinfo h3{font-size:22px;font-weight:900;margin-bottom:6px}
+.pinfo p{color:#c5cee2;line-height:1.8;font-size:14.5px}
+
+/* TIMELINE */
+.tl{position:relative;display:grid;gap:16px;padding-left:34px}
+.tl::before{content:"";position:absolute;left:9px;top:6px;bottom:6px;width:2px;background:linear-gradient(var(--c1),var(--c3),var(--c4))}
+.ti{position:relative}
+.ti::before{content:"";position:absolute;left:-31px;top:24px;width:12px;height:12px;border-radius:50%;background:var(--bg);border:2px solid var(--c1);box-shadow:0 0 12px var(--c1)}
+.ti .in{display:grid;grid-template-columns:120px 1fr;gap:18px;padding:18px 22px;align-items:center}
+.ti .yr{font-family:var(--hud);font-weight:700;font-size:38px;color:var(--c1);letter-spacing:.02em}
+.ti h3{font-size:18px;font-weight:900}
+.ti p{color:var(--sub);font-size:14px;line-height:1.7;margin-top:3px}
+
+/* QUIZ */
+.quiz{max-width:860px;margin:0 auto}
+.quiz .in{padding:30px}
+.qh{display:flex;justify-content:space-between;font-family:var(--hud);letter-spacing:.18em;font-size:13px;color:var(--sub)}
+.qh b{color:var(--c1)}
+.qbar{height:3px;background:#ffffff10;margin:12px 0 24px}
+.qbar i{display:block;height:100%;background:linear-gradient(90deg,var(--c1),var(--c4));transition:width .4s}
+.qq{font-size:21px;font-weight:900;line-height:1.55;margin-bottom:20px}
+.opts{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.opt{cursor:pointer;text-align:left;font:inherit;font-size:15px;font-weight:500;color:#e2e8f5;background:#ffffff06;border:1px solid var(--line);border-radius:12px;padding:14px 16px;display:flex;gap:12px;align-items:flex-start;transition:.2s}
+.opt span{font-family:var(--hud);font-weight:700;color:var(--dim)}
+.opt:hover:not(:disabled){border-color:var(--c1);background:#2ee6ff0d}
+.opt.ok{border-color:var(--ok);background:#3dffa814}.opt.ok span{color:var(--ok)}
+.opt.no{border-color:var(--bad);background:#ff5c7a14;animation:sk .35s}
+@keyframes sk{30%{transform:translateX(-5px)}70%{transform:translateX(5px)}}
+.exp{display:none;margin-top:16px;padding:14px 16px;border-radius:12px;background:#ffffff08;border-left:3px solid var(--c4);line-height:1.75;font-size:14.5px}
+.nx{margin-top:12px;text-align:right}
+.btn{cursor:pointer;font:inherit;font-weight:900;font-size:15px;color:#04060d;background:linear-gradient(90deg,var(--c1),#8ff3ff);border:0;border-radius:10px;padding:12px 22px;box-shadow:0 0 22px #2ee6ff55;transition:transform .2s}
+.btn:hover{transform:translateY(-2px)}
+.res{text-align:center;padding:10px 0}
+.epa{width:220px;height:74px;margin:10px auto 18px;border-radius:10px 40px 40px 10px;background:linear-gradient(#141a2a,#05070d);border:1px solid #ffffff22;display:flex;gap:8px;align-items:center;justify-content:center;transform:perspective(500px) rotateX(18deg);box-shadow:0 20px 40px #000}
+.epa i{width:16px;height:52px;border-radius:2px;background:linear-gradient(90deg,#b98a2e,#ffe08a,#b98a2e);box-shadow:0 0 12px #ffcf5a88}
+.res .sc{font-family:var(--hud);font-weight:700;font-size:72px;line-height:1;background:linear-gradient(90deg,var(--c1),var(--c4));-webkit-background-clip:text;background-clip:text;color:transparent}
+.res h3{font-size:26px;font-weight:900;margin:8px 0}
+.res p{color:var(--sub);margin-bottom:20px}
+
+footer{padding:60px 20px 70px;text-align:center;color:var(--dim);font-size:13px;line-height:1.8}
+
+@media (max-width:980px){
+  .phys,.anat .in,.mbox .in{grid-template-columns:1fr}
+  .forces{grid-template-columns:1fr 1fr}
+  .pside{border-left:0;border-top:1px solid var(--line)}
+  .view{min-height:300px}
+  .steps{grid-template-columns:repeat(4,1fr)}
+}
+@media (max-width:640px){
+  .readout{display:none}.corner{display:none}
+  .hcopy{bottom:60px}
+  .sh{grid-template-columns:1fr}.sh .num{font-size:56px;grid-row:auto}
+  .forces,.opts{grid-template-columns:1fr}
+  .cmpbar{grid-template-columns:1fr}.cmpbar .vs{text-align:center}
+  .crow{grid-template-columns:1fr 110px 1fr}
+  .steps{grid-template-columns:repeat(3,1fr)}
+  .pinfo{grid-template-columns:1fr}
+  .ti .in{grid-template-columns:1fr;gap:4px}
+  .tbl{grid-template-columns:1fr 1fr}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div id="prog"></div>
+<nav id="nav"><div class="wrap">
+  <span class="logo">AIR<b>LINER</b></span>
+  <a href="#fleet"><span>01</span>도감</a><a href="#scale"><span>02</span>크기 비교</a><a href="#physics"><span>03</span>비행 원리</a><a href="#anatomy"><span>04</span>구조</a><a href="#profile"><span>05</span>비행 단계</a><a href="#timeline"><span>06</span>역사</a><a href="#test"><span>07</span>테스트</a>
+</div></nav>
+
+<header class="hero" id="hero">
+  <canvas id="heroCv"></canvas>
+  <div class="shade"></div>
+  <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+  <div class="readout">
+    <div class="nm" id="roName">—</div>
+    <div>GND SPEED<b id="roSpd">0</b></div>
+    <div>ALTITUDE FT<b id="roAlt">0</b></div>
+    <div>HEADING<b id="roHdg">000°</b></div>
+    <div>OAT<b>-54°C</b></div>
+  </div>
+  <div class="hcopy"><div class="wrap">
+    <span class="tag">AIRLINER ENCYCLOPEDIA · 중학생 항공 탐구</span>
+    <h1>수백 톤의 금속이<br><em>하늘에 떠 있는 이유</em></h1>
+    <p class="lead">세계의 대표 여객기 14기의 실제 제원과 설계 이야기, 그리고 양력·추력·항력을 직접 조종하며 배우는 비행의 물리학. 3D 모델을 드래그해서 돌려 보세요.</p>
+    <div class="models" id="models"></div>
+  </div></div>
+  <div class="drag hud">◂ DRAG TO ROTATE ▸</div>
+  <div class="scrollhint"></div>
+</header>
+
+<section id="fleet"><div class="wrap">
+  <div class="sh reveal"><div class="num">01</div><h2>여객기 도감</h2><p>대표 여객기의 제원을 카드로 정리했어요. 카드를 누르면 3D 모델과 상세 제원, 설계 이야기를 볼 수 있어요.</p></div>
+  <div class="tools reveal"><div id="chips" style="display:flex;gap:8px;flex-wrap:wrap"></div><div class="sp"></div>
+    <input class="inp" id="q" placeholder="모델명·제조사 검색" style="min-width:200px">
+    <select class="inp" id="sort"><option value="firstFlight">첫 비행 순</option><option value="seats">좌석 수</option><option value="speed">순항 속도</option><option value="range">항속 거리</option><option value="mtow">최대이륙중량</option><option value="length">기체 길이</option></select></div>
+  <div class="grid" id="grid"></div>
+</div></section>
+
+<section id="scale"><div class="wrap">
+  <div class="sh reveal"><div class="num">02</div><h2>실제 비율 크기 비교</h2><p>두 기체를 같은 축척의 설계도 위에 겹쳐 봐요. 격자 한 칸은 5m이고, 회색 사각형은 길이 12m짜리 시내버스예요.</p></div>
+  <div class="glow reveal"><div class="in">
+    <div class="crows" style="padding-bottom:0"><div class="cmpbar"><select class="inp sa" id="ca"></select><div class="vs">VS</div><select class="inp sb" id="cb"></select></div></div>
+    <div class="bp" id="bp"></div>
+    <div class="crows" id="crows"></div>
+  </div></div>
+</div></section>
+
+<section id="physics"><div class="wrap">
+  <div class="sh reveal"><div class="num">03</div><h2>비행의 물리학 · 조종 시뮬레이터</h2><p>추력(엔진 출력)과 받음각(날개가 공기를 맞는 각도)을 바꿔 보세요. 양력이 무게보다 크면 상승하고, 받음각이 너무 크면 공기 흐름이 날개에서 떨어져 나가 <b>실속(stall)</b>이 일어나요.</p></div>
+  <div class="phys reveal">
+    <div class="glow"><div class="in">
+      <div class="simsky" id="simsky"><div id="simplane"></div><div id="arws"></div></div>
+      <div class="simctl">
+        <div class="rng"><label>추력 THRUST <b id="tv">55%</b></label><input type="range" id="thr" min="0" max="100" value="55"></div>
+        <div class="rng"><label>받음각 ANGLE OF ATTACK <b id="av">5°</b></label><input type="range" id="aoa" min="0" max="18" value="5"></div>
+        <div class="msg" id="msg"></div>
+      </div>
+    </div></div>
+    <div class="glow"><div class="in pfdwrap">
+      <div class="hud" style="font-size:12px;color:var(--sub)">PRIMARY FLIGHT DISPLAY</div>
+      <svg class="pfd" viewBox="0 0 300 300" id="pfd">
+        <defs><clipPath id="pc"><circle cx="150" cy="150" r="118"/></clipPath></defs>
+        <g clip-path="url(#pc)"><g id="hor">
+          <rect x="-300" y="-600" width="900" height="750" fill="#1f6fd1"/><rect x="-300" y="150" width="900" height="750" fill="#7b4a1f"/>
+          <line x1="-300" y1="150" x2="600" y2="150" stroke="#fff" stroke-width="2"/>
+          <g stroke="#fff" stroke-width="1.6" font-family="Rajdhani" font-size="11" fill="#fff">
+            <line x1="125" y1="110" x2="175" y2="110"/><text x="180" y="114">10</text><line x1="135" y1="130" x2="165" y2="130"/>
+            <line x1="115" y1="70" x2="185" y2="70"/><text x="190" y="74">20</text><line x1="135" y1="90" x2="165" y2="90"/>
+            <line x1="125" y1="190" x2="175" y2="190"/><text x="180" y="194">10</text><line x1="135" y1="170" x2="165" y2="170"/>
+            <line x1="115" y1="230" x2="185" y2="230"/><text x="190" y="234">20</text>
+          </g></g></g>
+        <circle cx="150" cy="150" r="118" fill="none" stroke="#ffffff55" stroke-width="2"/>
+        <g stroke="#fff" stroke-width="2"><line x1="150" y1="24" x2="150" y2="36"/><line x1="87" y1="41" x2="93" y2="51"/><line x1="213" y1="41" x2="207" y2="51"/><line x1="41" y1="87" x2="51" y2="93"/><line x1="259" y1="87" x2="249" y2="93"/></g>
+        <path d="M90 150 H130 L138 160 M210 150 H170 L162 160" stroke="#ffd23f" stroke-width="5" fill="none" stroke-linecap="round"/>
+        <rect x="146" y="146" width="8" height="8" fill="#ffd23f"/>
+      </svg>
+      <div class="rd"><div><span>SPEED KM/H</span><b id="rSpd">0</b></div><div><span>ALTITUDE FT</span><b id="rAlt">0</b></div><div><span>V/S FT/MIN</span><b id="rVs">0</b></div><div><span>LIFT / WEIGHT</span><b id="rLw">0</b></div></div>
+    </div></div>
+  </div>
+  <div class="forces" id="forces"></div>
+</div></section>
+
+<section id="anatomy"><div class="wrap">
+  <div class="sh reveal"><div class="num">04</div><h2>기체 구조 해부도</h2><p>설계도 위의 노란 표시를 눌러 각 부분의 이름과 역할, 그리고 그 부분이 움직이는 조종면을 알아보세요.</p></div>
+  <div class="glow anat reveal"><div class="in">
+    <div class="bpv"><svg id="anaSvg"></svg></div>
+    <div class="pside" id="pside"><span class="k">SELECT A COMPONENT</span><h3>구조를 선택하세요</h3><p>여객기는 수백만 개의 부품으로 이루어져 있지만, 크게 동체·날개·꼬리날개·엔진·착륙장치로 나눌 수 있어요.</p><div class="plist" id="plist"></div></div>
+  </div></div>
+</div></section>
+
+<section id="profile"><div class="wrap">
+  <div class="sh reveal"><div class="num">05</div><h2>비행 프로파일</h2><p>공항에 도착해서 목적지에 내릴 때까지, 여객기의 고도와 속도가 어떻게 바뀌는지 따라가 봐요.</p></div>
+  <div class="glow prof reveal"><div class="in">
+    <svg viewBox="0 0 1000 280" id="profSvg"></svg>
+    <div class="steps" id="steps"></div>
+    <div class="pinfo"><div class="nums"><div><span>ALTITUDE FT</span><b id="pAlt">0</b></div><div><span>SPEED KM/H</span><b id="pSpd">0</b></div></div><div><h3 id="pT"></h3><p id="pD"></p></div></div>
+  </div></div>
+</div></section>
+
+<section id="timeline"><div class="wrap">
+  <div class="sh reveal"><div class="num">06</div><h2>항공 역사 타임라인</h2><p>12초 동안 37m를 날았던 첫 동력 비행에서, 500명을 태우고 지구 반대편까지 날아가는 오늘날까지의 이야기예요.</p></div>
+  <div class="tl" id="tl"></div>
+</div></section>
+
+<section id="test"><div class="wrap">
+  <div class="sh reveal"><div class="num">07</div><h2>조종사 자격 테스트</h2><p>문제를 모두 풀면 점수에 따라 기장 견장(줄 4개)부터 훈련생 견장까지 받을 수 있어요.</p></div>
+  <div class="glow quiz reveal"><div class="in" id="qbox"></div></div>
+</div></section>
+
+<footer>AIRLINER ENCYCLOPEDIA · 제원은 대표 모델 기준의 대략적인 값이며, 같은 기종이라도 형식과 항공사 설정에 따라 달라요.<br>3D 모델과 설계도는 실제 길이·날개폭 비율을 반영한 단순화 모델이에요.</footer>
+
+<div class="modal" id="modal"><div class="glow mbox hot"><div class="in">
+  <button class="close" id="mclose" aria-label="닫기">✕</button>
+  <div class="view" id="mview"><canvas id="mCv"></canvas><div class="vlab" id="vlab"></div><div class="vhint">DRAG TO ROTATE</div></div>
+  <div class="detail" id="mdet"></div>
+</div></div></div>
+
+<script>
+window.PLANES_A = [
+  {
+    id: "b747", name: "보잉 747", nick: "점보", code: "B747-400", maker: "보잉", country: "미국", flag: "🇺🇸",
+    firstFlight: 1969, category: "쌍통로 대형기", seats: 416, length: 70.6, wingspan: 64.4, speed: 920, range: 13450,
+    engines: 4, status: "일부 운항", color: "#c0392b", emoji: "✈️",
+    mtow: 396.9, ceiling: 13700, engine: "PW4056 / CF6-80C2",
+    summary: "보잉 747은 1970년 취항한 세계 최초의 광동체(객실 통로가 두 개인 넓은 동체) 여객기로, 약 50년간 장거리 항공 시장을 이끌었습니다. 엔진 4개를 단 사발기(四發機)로 터보팬(대형 팬으로 공기를 밀어내 추력을 얻는 제트엔진)의 높은 효율을 활용해 대양 횡단 노선을 대중화했습니다. 2층 구조의 앞부분 덕분에 화물기와 정부 전용기로도 폭넓게 개조되었습니다.",
+    facts: [
+      "1970년 팬암(Pan Am)이 뉴욕-런던 노선에 처음 투입했고, 이전 최대 기종인 707보다 좌석 수가 두 배 이상 많았습니다.",
+      "화물기로 전환할 것을 염두에 두고 조종석을 위층에 배치했으며, 그 결과 기수 부분이 위로 열리는 화물 적재 구조가 가능해졌습니다.",
+      "총 1,500대 이상 생산되었고, 2023년 1월 마지막 747-8이 인도되며 54년간의 생산이 끝났습니다."
+    ],
+    korea: "대한항공이 747-400과 최신형 747-8i를 장거리 노선과 화물 수송에 운용했고, 아시아나항공도 747-400을 운용했으나 현재는 대부분 퇴역했습니다.",
+    word: { term: "광동체(와이드바디)", meaning: "객실 안에 통로가 두 개 있는 폭 넓은 동체 구조로, 한 줄에 7석 이상을 배치할 수 있는 대형 여객기를 가리킵니다." }
+  },
+  {
+    id: "b737", name: "보잉 737", nick: "하늘의 택시", code: "B737-800", maker: "보잉", country: "미국", flag: "🇺🇸",
+    firstFlight: 1967, category: "단일통로 소형기", seats: 175, length: 39.5, wingspan: 35.8, speed: 840, range: 6500,
+    engines: 2, status: "운항 중", color: "#2980b9", emoji: "✈️",
+    mtow: 79, ceiling: 12500, engine: "CFM56-7B27",
+    summary: "보잉 737은 1960년대에 설계된 이후 개량을 거듭하며 역사상 가장 많이 생산된 제트 여객기가 되었습니다. 쌍발(엔진 2개) 구성과 단일통로(통로가 하나인 동체) 설계로 단거리와 중거리 노선에서 운영 효율이 높습니다. 고바이패스 터보팬(바깥으로 우회하는 공기량이 많아 연료 효율이 좋은 엔진)으로 진화하면서 경제성을 유지해 왔습니다.",
+    facts: [
+      "1967년 초도비행 이후 1만 1천 대 이상이 생산되어, 한 기종으로는 항공 역사에서 가장 많은 수를 기록했습니다.",
+      "엔진 지름이 커지면서 지상고가 낮은 기체 구조에 맞추기 위해 엔진 흡입구 아랫부분을 납작하게 깎은 독특한 형태가 되었습니다.",
+      "2018~2019년 737 MAX가 MCAS(자동 실속 방지 소프트웨어) 문제로 약 20개월 동안 전 세계에서 운항이 중단되었습니다."
+    ],
+    korea: "제주항공, 진에어, 티웨이항공 등 국내 저비용항공사가 737-800을 주력 기재로 오랫동안 운용했고, 대한항공도 일부 737 계열을 운용했습니다.",
+    word: { term: "고바이패스 터보팬", meaning: "엔진 중심부를 지나지 않고 바깥으로 우회하는 공기의 비율이 높은 제트엔진으로, 추력 대비 연료 소모와 소음이 적습니다." }
+  },
+  {
+    id: "b777", name: "보잉 777", nick: "트리플 세븐", code: "B777-300ER", maker: "보잉", country: "미국", flag: "🇺🇸",
+    firstFlight: 1994, category: "쌍통로 대형기", seats: 368, length: 73.9, wingspan: 64.8, speed: 905, range: 13650,
+    engines: 2, status: "운항 중", color: "#16a085", emoji: "✈️",
+    mtow: 351.5, ceiling: 13100, engine: "GE90-115B",
+    summary: "보잉 777은 쌍발 광동체 여객기로, 엔진 4개짜리 대형기가 맡던 장거리 노선을 대체하며 항공 시장의 판도를 바꿨습니다. ETOPS(쌍발기가 엔진 하나로 비행할 수 있는 최대 시간 규정) 180분 이상 인증을 처음부터 갖추고 취항한 첫 기종입니다. 기체 설계를 전부 3D 컴퓨터로 진행해 부품 간 간섭 오류를 크게 줄였습니다.",
+    facts: [
+      "GE90-115B 엔진은 팬 지름이 약 3.25m에 이르고, 최대 추력이 약 512kN(약 11.5만 파운드)에 달하는 세계 최대급 상용 엔진입니다.",
+      "1995년 취항 당시 보잉 최초로 CATIA 소프트웨어로 전 기체를 디지털 설계했고, 플라이 바이 와이어(조종 입력을 전기 신호로 전달하는 방식)를 적용했습니다.",
+      "2005년 777-200LR은 홍콩에서 런던까지 동쪽으로 비행하며 약 21,600km를 날아 민항기 최장 무착륙 비행 기록을 세웠습니다."
+    ],
+    korea: "대한항공과 아시아나항공이 777-300ER을 미주와 유럽 등 장거리 노선의 주력으로 운용했고, 두 회사 모두 777F 화물기도 도입했습니다.",
+    word: { term: "ETOPS", meaning: "쌍발 여객기가 한쪽 엔진이 멈춘 상태에서도 가장 가까운 비상 착륙 공항까지 비행할 수 있는 시간을 기준으로 정한 운항 인증 제도입니다." }
+  },
+  {
+    id: "b787", name: "보잉 787 드림라이너", nick: "드림라이너", code: "B787-9", maker: "보잉", country: "미국", flag: "🇺🇸",
+    firstFlight: 2009, category: "쌍통로 중형기", seats: 296, length: 62.8, wingspan: 60.1, speed: 903, range: 14140,
+    engines: 2, status: "운항 중", color: "#8e44ad", emoji: "✈️",
+    mtow: 254, ceiling: 13100, engine: "GEnx-1B / Trent 1000",
+    summary: "보잉 787은 동체와 날개의 약 50%를 탄소섬유 복합재(탄소 섬유를 수지로 굳힌 가볍고 튼튼한 소재)로 만들어 기존 중형기보다 연료 효율을 약 20% 개선했습니다. 엔진 추출 공기를 쓰지 않는 전기식 시스템(블리드리스, 엔진 압축 공기를 빼 쓰지 않는 방식)을 채택해 엔진 효율과 정비성을 높였습니다. 복합재는 부식과 피로에 강해 객실 기압과 습도를 더 쾌적하게 유지할 수 있습니다.",
+    facts: [
+      "객실 고도를 해발 약 1,800m(6,000피트) 수준으로 유지해, 기존 기종의 약 2,400m(8,000피트)보다 승객의 피로가 줄어듭니다.",
+      "일렉트로크로믹 창문은 전기로 투명도를 조절하며, 창 크기가 기존 기종보다 약 30% 커졌습니다.",
+      "2013년 리튬이온 배터리 과열 사고로 전 세계 787이 약 3개월간 운항 정지되었고, 이후 배터리 격납 설계가 보강되었습니다."
+    ],
+    korea: "대한항공과 아시아나항공이 787-9를 중장거리 노선에 도입했으며, 아시아나는 A350과 함께 중형 광동체 라인업을 구성했습니다.",
+    word: { term: "복합재(CFRP)", meaning: "탄소 섬유를 수지로 굳힌 소재로, 알루미늄보다 가벼우면서도 강도가 높아 항공기 연료 효율 향상에 쓰입니다." }
+  },
+  {
+    id: "b707", name: "보잉 707", nick: "제트 시대의 개척자", code: "B707-320B", maker: "보잉", country: "미국", flag: "🇺🇸",
+    firstFlight: 1957, category: "단일통로 소형기", seats: 140, length: 46.6, wingspan: 44.4, speed: 900, range: 6700,
+    engines: 4, status: "은퇴", color: "#7f8c8d", emoji: "🛫",
+    mtow: 151, ceiling: 12000, engine: "JT3D-3B",
+    summary: "보잉 707은 1958년 팬암이 대서양 횡단 노선에 투입하며 본격적인 제트 여객 시대를 연 기종입니다. 약 35도 후퇴각(날개를 뒤로 젖힌 각도)을 가진 날개와 날개 아래 4개의 엔진 포드가 기본 설계로 자리 잡아 이후 여객기의 표준 형태가 되었습니다. 초기 터보제트에서 JT3D 터보팬으로 바뀌며 연료 효율과 소음이 개선되었습니다.",
+    facts: [
+      "프로펠러기보다 약 두 배 빠른 시속 900km 안팎으로 날아 뉴욕-파리 비행 시간을 크게 줄였습니다.",
+      "총 1,010대 정도가 생산되었고, 군용 파생형인 KC-135 급유기와 E-3 조기경보기의 기반이 되었습니다.",
+      "초기형은 터보제트 엔진을 썼지만 320B형부터 터보팬 JT3D를 달아 연료 소모와 이착륙 거리를 줄였습니다."
+    ],
+    korea: "대한항공이 1970년대 초 707을 도입해 태평양 횡단 노선 등에 사용했으나, 오래전에 모두 퇴역했습니다.",
+    word: { term: "후퇴익", meaning: "날개를 뒤쪽으로 젖힌 형태로, 음속에 가까운 속도에서 생기는 공기 저항(조파 항력)을 줄여 고속 순항에 유리합니다." }
+  },
+  {
+    id: "dc3", name: "더글러스 DC-3", nick: "하늘의 일꾼", code: "DC-3", maker: "더글러스", country: "미국", flag: "🇺🇸",
+    firstFlight: 1935, category: "프로펠러기", seats: 28, length: 19.7, wingspan: 29.0, speed: 333, range: 2400,
+    engines: 2, status: "일부 운항", color: "#d35400", emoji: "🛩️",
+    mtow: 11.4, ceiling: 7100, engine: "Pratt & Whitney R-1830 Twin Wasp",
+    summary: "DC-3는 1935년에 처음 비행한 쌍발 프로펠러기로, 승객 운임만으로 수익을 낼 수 있었던 최초의 여객기로 평가받습니다. 올메탈 세미모노코크(금속 외피가 하중을 함께 분담하는 구조) 동체와 공랭식 성형 엔진(실린더를 원형으로 배열한 엔진)으로 신뢰성과 정비성이 매우 뛰어났습니다. 제2차 세계대전 중에는 군용 수송기 C-47로 대량 생산되어 보급 작전의 핵심이 되었습니다.",
+    facts: [
+      "민간형과 군용형을 합쳐 약 16,000대(소련 면허 생산 Li-2 포함)가 만들어졌습니다.",
+      "엔진 한 개당 약 1,200마력의 R-1830 성형 엔진 2기를 장착하고, 순항 속도는 시속 약 330km입니다.",
+      "90년 가까이 지난 지금도 일부 기체가 화물 수송, 관광 비행, 에어쇼 등에서 현역으로 쓰이고 있습니다."
+    ],
+    korea: "대한국민항공사(KNA) 등 한국 초기 민간 항공과 군 수송에 C-47 계열이 쓰였으나, 현재 국내 정기 노선에는 없습니다.",
+    word: { term: "세미모노코크", meaning: "동체 외피와 내부 뼈대가 함께 하중을 나눠 받는 구조로, 가벼우면서도 강한 항공기 동체 설계의 기본이 되었습니다." }
+  },
+  {
+    id: "b767", name: "보잉 767", nick: "중형 쌍발기의 원조", code: "B767-300ER", maker: "보잉", country: "미국", flag: "🇺🇸",
+    firstFlight: 1981, category: "쌍통로 중형기", seats: 245, length: 54.9, wingspan: 47.6, speed: 851, range: 11070,
+    engines: 2, status: "운항 중", color: "#2c3e50", emoji: "✈️",
+    mtow: 186.9, ceiling: 13100, engine: "CF6-80C2 / PW4060",
+    summary: "보잉 767은 쌍발 광동체 기종으로, 대서양 횡단 같은 장거리 해상 노선에 ETOPS(쌍발기의 해상 장거리 비행 인증 제도)를 처음 본격 적용한 기종입니다. 1980년대에 이미 글래스 콕핏(디지털 계기 화면 조종석)을 채택해 승무원 2명만으로 운항하도록 설계되었습니다. 현재는 화물기 767F와 군용 급유기 KC-46의 기반 기체로 활약합니다.",
+    facts: [
+      "1985년 ETOPS 120분 인증을 받은 뒤 대서양 횡단 노선의 쌍발기 운항이 급속히 늘었습니다.",
+      "1983년 에어 캐나다 143편 연료 부족 사고에서 기장이 글라이더 방식으로 무동력 착륙에 성공해 '김리 글라이더'로 불렸습니다.",
+      "767-300F는 택배 및 항공 화물 업계의 주력이며, 파생형 KC-46 페가수스는 미 공군 급유기로 쓰입니다."
+    ],
+    korea: "아시아나항공이 767-300을 중거리 노선에 운용한 적이 있으며, 대한항공은 767 계열을 일부 운용했으나 현재는 대부분 다른 기종으로 대체되었습니다.",
+    word: { term: "글래스 콕핏", meaning: "아날로그 계기 대신 LCD 같은 디지털 화면에 비행 정보를 통합 표시하는 조종석으로, 승무원 수를 줄이고 정보 파악을 쉽게 합니다." }
+  }
+];
+
+</script>
+<script>
+window.PLANES_B = [
+{ id: "a380", name: "에어버스 A380", nick: "슈퍼점보", code: "A380-800", mtow: 575, ceiling: 13100, engine: "Trent 900", korea: "대한항공이 2011년부터 10대 안팎을 운용했고 아시아나항공도 6대를 도입했으나, 두 회사 모두 연료 효율 문제로 단계적으로 줄이는 추세다.", maker: "에어버스", country: "유럽(프랑스 등)", flag: "🇪🇺", firstFlight: 2005, category: "쌍통로 대형기", seats: 525, length: 72.7, wingspan: 79.8, speed: 903, range: 15000, engines: 4, status: "일부 운항", color: "#1e6fd9", emoji: "✈️",
+  summary: "A380은 객실 전체가 위아래 두 층으로 이뤄진 세계 최대의 양산 여객기로, 최대 853명까지 인증받았다. 터보팬(공기를 빨아들여 압축·연소시켜 추력을 얻는 제트엔진) 4기를 달고 575톤에 이르는 기체를 띄우며, 이를 수용하려면 활주로와 탑승교를 별도로 갖춘 공항이 필요하다. 2021년 마지막 기체가 인도되며 생산은 끝났지만, 항공 수요가 허브 공항에 집중되던 시대를 상징하는 기종으로 평가된다.",
+  facts: ["최대이륙중량 575톤으로, 날개 폭이 79.8m여서 일반 활주로 유도로를 그대로 쓰기 어려워 공항 시설을 개조해야 했다.", "2007년 싱가포르항공이 첫 상업 운항을 시작했고, 2021년까지 총 251대가 인도되었다.", "날개 앞전부터 동체까지 이어지는 대형 복합재 구조를 써서 기체 무게의 약 25%를 복합재로 채웠다."],
+  word: { term: "이중 갑판", meaning: "객실이 위아래 두 층으로 나뉜 구조로, 같은 길이의 동체에서 바닥 면적을 크게 늘리는 설계 방식이다." } },
+{ id: "a320", name: "에어버스 A320", nick: "하늘의 시내버스", code: "A320neo", mtow: 79, ceiling: 12100, engine: "CFM LEAP-1A", korea: "대한항공과 아시아나항공은 물론 에어부산, 에어서울 등 여러 국내 항공사가 A320 계열(A321 포함)을 단거리와 중거리 노선에 운용한다.", maker: "에어버스", country: "유럽(프랑스 등)", flag: "🇪🇺", firstFlight: 1987, category: "단일통로 소형기", seats: 180, length: 37.6, wingspan: 34.1, speed: 828, range: 6100, engines: 2, status: "운항 중", color: "#0fa3b1", emoji: "✈️",
+  summary: "A320은 1988년 취항한 단일통로 여객기로, 상업용 기종 가운데 처음으로 플라이 바이 와이어(조종 입력을 전기 신호로 바꿔 컴퓨터가 조종면을 움직이는 방식)를 전면 도입했다. 이 기술 덕분에 기체 안전 범위를 컴퓨터가 지켜 주고, 파생형이 같은 조종 자격으로 운영되는 장점도 생겼다. 개량형 A320neo는 연소 효율이 높은 신형 엔진으로 연료 소비를 약 15~20% 줄였다.",
+  facts: ["A320 계열은 지금까지 1만 대 이상 인도되어 보잉 737과 함께 세계에서 가장 많이 팔린 여객기 계열이다.", "조종석에는 중앙 조종간 대신 옆에 놓인 사이드스틱을 달아 계기판 시야를 넓혔다.", "A320neo는 지름 약 2m의 대형 팬을 가진 고바이패스비 엔진으로 연료를 약 15% 아끼고 소음도 줄였다."],
+  word: { term: "바이패스비", meaning: "엔진 중심부를 거치지 않고 팬이 밀어내는 공기의 양을 연소에 쓰이는 공기의 양으로 나눈 값으로, 클수록 연료 효율과 정숙성이 좋아진다." } },
+{ id: "a350", name: "에어버스 A350", nick: "복합재 장거리 주자", code: "A350-900", mtow: 283, ceiling: 13100, engine: "Trent XWB-84", korea: "아시아나항공이 2017년, 대한항공이 2019년부터 A350-900을 도입해 미주·유럽 장거리 노선에 투입하고 있다.", maker: "에어버스", country: "유럽(프랑스 등)", flag: "🇪🇺", firstFlight: 2013, category: "쌍통로 중형기", seats: 325, length: 66.8, wingspan: 64.8, speed: 903, range: 15000, engines: 2, status: "운항 중", color: "#6c4ad8", emoji: "✈️",
+  summary: "A350은 동체와 날개의 약 53%를 탄소섬유 강화 플라스틱 같은 복합재(가볍고 강한 신소재)로 만든 쌍발 장거리 여객기다. 금속보다 부식과 피로에 강해 객실 기압과 습도를 더 쾌적하게 유지할 수 있고, 무게가 줄어든 만큼 연료도 덜 쓴다. 엔진 두 기만으로 1만 5천 km 안팎을 날 수 있어 사발 기종 자리를 빠르게 대체하고 있다.",
+  facts: ["기체 구조의 약 53%가 복합재이고, 알루미늄 합금과 티타늄이 나머지 대부분을 차지한다.", "롤스로이스 Trent XWB 엔진은 지름 약 3m의 팬을 달고 있으며 단일통로기 엔진과 비교하면 추력이 훨씬 크다.", "A350-900ULR형은 싱가포르~뉴욕 약 18시간 노선에 투입되어 세계에서 가장 긴 상업 노선을 운항했다."],
+  word: { term: "복합재", meaning: "서로 다른 재료를 섞어 각각의 장점만 살린 소재로, 항공기에는 탄소섬유를 수지로 굳힌 형태를 많이 쓴다." } },
+{ id: "concorde", name: "콩코드", nick: "대서양의 초음속 제트", code: "Concorde", mtow: 185, ceiling: 18300, engine: "Olympus 593", korea: "한국 항공사가 운용하거나 정기 취항한 적은 없으며, 국내에서는 사진과 영상으로만 접할 수 있다.", maker: "영국항공우주공사·프랑스 아에로스파시알", country: "영국·프랑스", flag: "🇬🇧", firstFlight: 1969, category: "초음속기", seats: 100, length: 61.7, wingspan: 25.6, speed: 2140, range: 7200, engines: 4, status: "은퇴", color: "#c0392b", emoji: "🚀",
+  summary: "콩코드는 마하 2(음속의 두 배, 약 시속 2,450km)로 순항한 유일한 초음속 여객기로, 런던~뉴욕을 3시간 반 안팎에 연결했다. 고속에서는 델타 날개(삼각형 날개)와 재연소 장치(배기에 연료를 더 태워 추력을 높이는 장치)가 핵심 역할을 했고, 음속을 돌파할 때 발생하는 음속 폭음 때문에 육지 위 초음속 비행은 금지되었다. 높은 운항 비용과 2000년 파리 추락 사고, 이후 수요 감소로 2003년 모든 기체가 퇴역했다.",
+  facts: ["순항 속도는 마하 2.04이며 고도 약 18km를 날아 승객이 창밖으로 하늘의 곡면을 볼 수 있었다.", "공기 마찰열로 기체가 20cm 안팎 늘어났고, 조종실 벽 틈에는 늘어난 흔적이 남았다.", "총 20대(시제기 포함)만 제작되었고 정기 운항은 1976년부터 2003년까지 이어졌다."],
+  word: { term: "음속 폭음", meaning: "물체가 음속을 넘을 때 압축된 공기의 충격파가 지상에 닿아 들리는 '쾅' 하는 큰 소리다." } },
+{ id: "e190", name: "엠브라에르 E190", nick: "리저널 제트의 강자", code: "E190", mtow: 51.8, ceiling: 12500, engine: "CF34-10E", korea: "국내 항공사의 정기 노선 운용 사례는 거의 없고, 한국에서는 보기 드문 기종이다.", maker: "엠브라에르", country: "브라질", flag: "🇧🇷", firstFlight: 2004, category: "지역 제트기", seats: 100, length: 36.2, wingspan: 28.7, speed: 823, range: 4500, engines: 2, status: "운항 중", color: "#2e9e5b", emoji: "🛩️",
+  summary: "E190은 브라질 엠브라에르가 만든 100석급 지역 제트기로, 승객이 적은 노선에서 대형 여객기를 대신하는 역할을 맡는다. 날개 밑에 GE CF34 터보팬 엔진 두 기를 달고 있으며, 좌석을 2열씩 배치한 2+2 구조라 가운데 좌석이 없다. 이 기종의 후속 개량형인 E190-E2는 신형 기어드 터보팬 엔진을 써서 연료 소비를 대폭 줄였다.",
+  facts: ["E170 시리즈를 확대해 만든 기종으로 2004년 처음 날았고 2005년 JetBlue가 첫 운항을 시작했다.", "최대이륙중량이 약 52톤으로 A320의 3분의 2 수준이라 소규모 공항의 짧은 활주로에도 운항할 수 있다.", "E190-E2는 프랫앤휘트니 기어드 터보팬을 달아 기존형보다 연료를 약 16% 줄였다."],
+  word: { term: "리저널 제트", meaning: "100석 안팎의 소형 제트 여객기로, 주요 공항과 중소도시를 잇는 지역 노선에 쓰인다." } },
+{ id: "c919", name: "COMAC C919", nick: "중국산 협동체 도전자", code: "C919", mtow: 77.3, ceiling: 12100, engine: "LEAP-1C", korea: "한국 항공사가 도입했거나 운항 계획을 공식화한 사례는 없다.", maker: "코맥(COMAC)", country: "중국", flag: "🇨🇳", firstFlight: 2017, category: "단일통로 소형기", seats: 164, length: 38.9, wingspan: 35.8, speed: 828, range: 5500, engines: 2, status: "운항 중", color: "#d4a017", emoji: "✈️",
+  summary: "C919는 중국상용항공기(COMAC)가 개발한 단일통로 중단거리 여객기로, A320neo와 보잉 737 MAX의 경쟁 기종을 목표로 한다. 2017년 초도 비행을 하고 2023년 5월 상하이에서 첫 상업 운항에 성공했다. 다만 핵심 부품인 엔진(CFM LEAP-1C), 항법 장비 등은 해외 업체에 의존하고 있어, 중국 항공 산업의 자립 수준을 보여 주는 지표로 자주 거론된다.",
+  facts: ["C919의 'C'는 China와 COMAC을, 첫 '9'는 영원을, '19'는 최대 190석을 의미한다는 설명이 있다.", "2023년 5월 28일 상하이~청두 노선에서 중국동방항공이 첫 상업 운항을 했다.", "표준형 기준 최대이륙중량은 약 72.5톤, 항속 거리 연장형은 약 77.3톤이다."],
+  word: { term: "형식 증명", meaning: "항공 당국이 해당 기종의 설계와 안전성을 심사해 운항을 허가하는 공식 인증 절차다." } },
+{ id: "atr72", name: "ATR 72", nick: "섬 노선의 일꾼", code: "ATR 72-600", mtow: 23, ceiling: 7620, engine: "PW127M", korea: "국내에서는 하이에어가 ATR 72-500을 도입한 바 있지만 대형 항공사의 주력 기종은 아니다.", maker: "ATR", country: "프랑스·이탈리아", flag: "🇫🇷", firstFlight: 1988, category: "프로펠러기", seats: 70, length: 27.2, wingspan: 27.1, speed: 510, range: 1500, engines: 2, status: "운항 중", color: "#e67e22", emoji: "🛩️",
+  summary: "ATR 72는 프랑스와 이탈리아 합작사 ATR이 만든 터보프롭(가스터빈이 프로펠러를 돌려 추력을 얻는 엔진) 쌍발기로, 70석 안팎의 단거리 노선에 쓰인다. 프로펠러는 낮은 속도와 낮은 고도에서 효율이 높아 제트기보다 연료를 훨씬 적게 쓰고, 짧은 활주로에서도 이착륙할 수 있다. 순항 속도는 마하 0.4 수준(시속 약 510km)이지만 근거리 노선에서는 시간 차이가 크지 않다.",
+  facts: ["날개가 동체 위에 붙은 고익 구조여서 이착륙 때 프로펠러가 지면에서 멀리 떨어진다.", "최대 운용 고도는 약 7,620m(2만 5천 피트)로 제트기보다 낮아 객실 여압 장치 부담이 작다.", "1988년 취항한 이래 1,700대 이상이 팔렸고 -600형은 유리 조종석과 개량된 프롭을 도입했다."],
+  word: { term: "터보프롭", meaning: "가스터빈 엔진의 회전력을 감속기를 거쳐 프로펠러에 전달하는 방식으로, 느린 속도와 짧은 거리에서 연료 효율이 좋다." } }
+];
+
+</script>
+<script>
+window.LEARN = {
+  "forces": [
+    { "name": "양력", "en": "Lift", "dir": "up", "color": "#3b82f6", "desc": "양력은 날개 위쪽의 공기가 빠르게 흐르며 압력이 낮아지는 베르누이 원리로 설명되며, 동시에 날개가 공기를 아래로 밀어내고 그 반작용으로 위로 받는 뉴턴 제3법칙의 결과이기도 하다. 양력의 크기는 날개 면적, 공기 밀도, 속도의 제곱, 그리고 기류와 날개 시위선이 이루는 받음각에 따라 달라진다.", "example": "달리는 차의 창밖으로 손바닥을 살짝 들어 올리면 손이 위로 떠오르는 느낌이 바로 양력의 원리다." },
+    { "name": "중력", "en": "Gravity", "dir": "down", "color": "#ef4444", "desc": "중력은 질량에 중력가속도(약 9.8 m/s²)를 곱한 값(W = mg)으로, 항상 지구 중심을 향해 작용한다. 여객기는 비행 중 연료를 소모하므로 질량이 줄고 그만큼 중력도 서서히 감소한다. 양력이 중력과 같아질 때 비행기는 고도를 유지한다.", "example": "장거리 비행 후반부에 비행기가 더 높은 고도로 올라가는 것은 연료가 줄어 기체가 가벼워졌기 때문이다." },
+    { "name": "추력", "en": "Thrust", "dir": "forward", "color": "#22c55e", "desc": "터보팬 엔진은 앞쪽 팬이 대량의 공기를 흡입해 압축하고 연소시킨 뒤 빠르게 뒤로 분출하며, 이때 뉴턴의 작용·반작용 법칙에 따라 기체가 앞으로 밀린다. 현대 여객기 추력의 대부분은 연소실을 거치지 않고 엔진을 우회하는 바이패스 공기에서 나오며, 이 덕분에 연료 효율과 소음이 개선된다.", "example": "바람을 가득 넣은 풍선의 입구를 놓으면 공기가 뒤로 빠져나가며 풍선이 앞으로 날아가는 것과 같은 원리다." },
+    { "name": "항력", "en": "Drag", "dir": "back", "color": "#f59e0b", "desc": "항력은 기체의 형상과 표면 마찰에서 생기는 형상항력과, 양력을 만드는 과정에서 날개 끝 와류로 생기는 유도항력으로 나뉜다. 날개 끝에 세운 윙렛은 와류를 약화시켜 유도항력을 줄이고 연료 소모를 낮춘다. 항력은 속도의 제곱에 비례해 커지므로 순항 속도 설계가 중요하다.", "example": "자전거로 빠르게 달릴 때 맞바람이 몸을 세게 밀어내는 느낌이 항력이며, 웅크리면 그 힘이 줄어든다." }
+  ],
+  "parts": [
+    { "id": "cockpit", "name": "조종석", "desc": "조종사가 비행 자세, 고도, 속도, 항법 정보를 통합 디스플레이로 확인하며 기체를 제어하는 공간이다. 조종간과 페달 입력은 에일러론, 승강타, 방향타 같은 조종면으로 전달되며, 최신 기종에서는 컴퓨터를 거쳐 작동한다." },
+    { "id": "fuselage", "name": "동체", "desc": "승객, 화물, 각종 시스템을 담는 원통형 몸통으로 날개와 꼬리날개를 구조적으로 연결한다. 고도 10km에서도 객실 기압을 유지하도록 압력 용기 역할을 하므로 원통 단면과 높은 강도가 요구된다." },
+    { "id": "wing", "name": "주날개", "desc": "양력을 만들어 내는 핵심 구조물이며 내부는 연료 탱크로 쓰인다. 바깥쪽 뒷전에는 좌우로 기체를 기울이는 에일러론이 있고, 앞전의 슬랫과 윗면의 스포일러가 양력과 항력을 조절한다. 스포일러는 착륙 직후 양력을 없애고 제동을 돕는다." },
+    { "id": "engine", "name": "엔진", "desc": "터보팬 엔진이 공기를 흡입·압축·연소·배기시켜 추력을 만든다. 착륙 시에는 역추력 장치가 배기 방향을 앞쪽으로 돌려 감속을 돕는다. 날개 아래에 달아 날개 구조의 하중을 줄이고 정비 접근성을 높인다." },
+    { "id": "flap", "name": "플랩", "desc": "날개 뒷전에서 아래로 펼쳐져 날개의 캠버와 면적을 키워 낮은 속도에서도 큰 양력을 얻게 한다. 앞전의 슬랫과 함께 사용하면 실속 속도가 낮아져 짧은 활주로에서도 이착륙이 가능하다. 대신 항력도 커지므로 순항 중에는 접어 둔다." },
+    { "id": "vtail", "name": "수직꼬리날개", "desc": "기체가 좌우로 흔들리는 요잉을 억제해 방향 안정성을 확보한다. 뒷부분의 방향타를 움직여 기수를 좌우로 돌리며, 한쪽 엔진이 정지했을 때 비대칭 추력을 상쇄하는 데에도 쓰인다." },
+    { "id": "htail", "name": "수평꼬리날개", "desc": "기체의 피치 안정성을 유지하고 승강타로 기수를 올리거나 내려 상승과 하강을 제어한다. 날개가 만드는 양력의 중심과 무게중심이 어긋나서 생기는 모멘트를 꼬리날개의 힘으로 상쇄한다." },
+    { "id": "gear", "name": "착륙장치", "desc": "이착륙과 지상 이동 때 기체 하중을 지탱하고 충격을 흡수하는 바퀴와 완충기 장치다. 이륙 후에는 동체와 날개 안으로 접어 넣어 형상항력을 줄이며, 착륙 시에는 자동 제동 장치와 함께 감속에 쓰인다." }
+  ],
+  "journey": [
+    { "icon": "CHK", "title": "체크인", "alt": 0, "spd": 0, "desc": "항공사 카운터나 모바일에서 예약과 여권을 확인하고 위탁 수하물의 무게를 측정해 보낸다. 승객 정보는 기체 중량과 무게중심 계산에 반영되어 이륙 성능 산출에 쓰인다." },
+    { "icon": "SEC", "title": "보안검색", "alt": 0, "spd": 0, "desc": "X선 검색기와 금속 탐지기로 휴대 수하물과 신체를 검사해 위험물 반입을 막는다. 액체류는 용기당 100mL 이하로 제한하는 국제 규정이 적용된다." },
+    { "icon": "BRD", "title": "탑승", "alt": 0, "spd": 0, "desc": "탑승구에서 탑승권을 확인한 뒤 좌석에 앉고, 승무원이 비상구 위치와 산소마스크 사용법을 안내한다. 조종사는 이 동안 출발 전 점검과 항법 장치 입력을 마치고 관제탑에서 푸시백 허가를 받는다." },
+    { "icon": "T/O", "title": "이륙", "alt": 5000, "spd": 300, "desc": "활주로에서 최대 추력으로 가속하다 V1을 지나면 이륙을 중단할 수 없고, VR 속도에서 조종간을 당겨 기수를 들어 올린다. 이후 착륙장치와 플랩을 정리하며 약 3,000~5,000피트까지 상승한다." },
+    { "icon": "CRZ", "title": "순항", "alt": 37000, "spd": 900, "desc": "연료 효율이 좋은 순항고도 FL370(약 37,000피트, 11km)에서 마하 0.8 안팎으로 일정하게 비행한다. 관제 구역의 항로를 따라 이동하며 제트기류를 활용하면 비행시간과 연료를 줄일 수 있다." },
+    { "icon": "LDG", "title": "착륙", "alt": 1000, "spd": 260, "desc": "ILS가 보내는 전파 신호를 따라 활주로 중심선과 3도 활강각을 맞추며 플랩을 펼치고 속도를 줄여 접근한다. 접지 후에는 스포일러, 자동 브레이크, 역추력을 함께 사용해 감속한다." },
+    { "icon": "ARR", "title": "도착", "alt": 0, "spd": 0, "desc": "유도로를 따라 탑승구에 접현해 엔진을 끄고 안전벨트 표시등이 꺼지면 하기한다. 입국 심사와 수하물 수취, 세관 신고를 마치면 여정이 끝난다." }
+  ],
+  "quiz": [
+    { "q": "날개가 양력을 얻는 원리를 가장 정확하게 설명한 것은?", "options": ["날개가 공기를 위로 밀어 올린다", "날개 위쪽 압력이 낮아지고 공기가 아래로 편향되며 반작용을 받는다", "엔진 추력이 직접 위로 작용한다", "날개 아래 공기가 진공이 된다"], "answer": 1, "explain": "베르누이 원리에 따른 압력차와 공기를 아래로 밀어내는 반작용(뉴턴 제3법칙)이 함께 양력을 만든다." },
+    { "q": "마하수 1.0이 의미하는 속도는?", "options": ["시속 100km", "음속과 같은 속도", "광속의 절반", "여객기 최대 속도"], "answer": 1, "explain": "마하수는 비행 속도를 그 환경의 음속으로 나눈 값이다. 1이면 음속과 같다." },
+    { "q": "받음각이 한계를 넘어 지나치게 커질 때 일어나는 현상은?", "options": ["양력이 계속 증가한다", "기류가 날개 윗면에서 떨어져 양력이 급감하는 실속", "항력이 사라진다", "추력이 두 배가 된다"], "answer": 1, "explain": "임계 받음각을 넘으면 날개 윗면의 기류가 박리되어 양력이 급격히 줄어드는 실속이 발생한다." },
+    { "q": "다음 중 양력 생성 과정에서 날개 끝 와류로 생기는 항력은?", "options": ["형상항력", "마찰항력", "유도항력", "조파항력"], "answer": 2, "explain": "유도항력은 양력을 만드는 대가로 발생하며 윙렛이 이를 줄이는 데 쓰인다." },
+    { "q": "제트기류에 대한 설명으로 옳은 것은?", "options": ["지표면에서 부는 약한 바람", "대류권 상층부를 서에서 동으로 부는 강한 바람", "적도에서만 생기는 바람", "비행기 엔진이 만드는 바람"], "answer": 1, "explain": "제트기류는 대류권계면 부근에서 시속 100km 이상으로 서에서 동으로 분다. 동쪽 비행에서는 순풍이 된다." },
+    { "q": "고도가 높아질수록 기압과 공기 밀도는 어떻게 변할까?", "options": ["둘 다 낮아진다", "둘 다 높아진다", "기압만 낮아진다", "변하지 않는다"], "answer": 0, "explain": "높이 올라갈수록 위에 있는 공기의 양이 줄어 기압과 밀도가 낮아지고, 그래서 항력이 줄어 연료 효율이 높아진다." },
+    { "q": "콩코드가 순항한 속도는 대략 얼마였을까?", "options": ["마하 0.5", "마하 0.85", "마하 2 정도", "마하 5"], "answer": 2, "explain": "콩코드는 마하 2 안팎의 초음속으로 날아 대서양 횡단을 약 3시간 30분에 마쳤다." },
+    { "q": "에어버스 A380의 가장 큰 특징은?", "options": ["단일 엔진", "전 길이 2층 객실 구조", "프로펠러 추진", "초음속 비행"], "answer": 1, "explain": "A380은 전 길이에 걸친 2층 객실을 갖춘 대형 여객기로 500명 이상을 태울 수 있다." },
+    { "q": "보잉 787 드림라이너가 연료 효율을 높인 핵심 요소는?", "options": ["나무 구조", "탄소섬유 복합재의 대량 사용", "더 큰 프로펠러", "엔진 4개 장착"], "answer": 1, "explain": "동체와 날개의 절반 이상에 탄소섬유 복합재를 써서 기체를 가볍게 해 연료를 아낀다." },
+    { "q": "쌍발 여객기의 장거리 해상 운항 허용 기준인 ETOPS가 요구하는 것은?", "options": ["엔진 한 개로 대체 공항까지 비행할 수 있는 능력과 신뢰성", "엔진 3개 이상", "최대 속도 제한", "특수 연료 사용"], "answer": 0, "explain": "ETOPS는 엔진 하나가 고장 나도 일정 시간 안에 대체 공항에 도착할 수 있음을 인증하는 제도다." },
+    { "q": "블랙박스라고 불리는 비행기록장치가 기록하는 것은?", "options": ["승객 명단만", "비행 데이터와 조종실 음성", "기내 영화 목록", "기상 예보"], "answer": 1, "explain": "비행자료기록장치(FDR)와 조종실음성기록장치(CVR)가 사고 원인 규명을 위해 데이터를 저장하며, 실제 색은 눈에 잘 띄는 주황색이다." },
+    { "q": "비행기 꼬리 조종면에 대한 설명으로 옳은 것은?", "options": ["방향타는 기수를 상하로 움직인다", "승강타는 기수를 상하로, 방향타는 좌우로 돌린다", "에일러론은 꼬리에 달려 있다", "스포일러는 추력을 늘린다"], "answer": 1, "explain": "수평꼬리날개의 승강타는 피치를, 수직꼬리날개의 방향타는 요를 조절한다. 에일러론은 날개에 있다." }
+  ],
+  "history": [
+    { "year": 1903, "title": "라이트 형제 첫 동력 비행", "desc": "라이트 형제가 플라이어호로 사람이 탄 최초의 지속적 동력 비행에 성공했다. 첫 비행은 12초간 약 36m였다." },
+    { "year": 1914, "title": "첫 정기 여객 항공", "desc": "미국 플로리다의 세인트피터즈버그-탬파 항공선이 운항을 시작하며 세계 최초의 정기 여객 항공 서비스로 기록되었다. 수상 비행기로 승객 한 명을 태웠다." },
+    { "year": 1936, "title": "DC-3 등장", "desc": "더글러스 DC-3는 신뢰성과 경제성을 갖춰 항공사가 승객 운임만으로 수익을 내게 한 첫 여객기다. 항공 여행의 대중화를 이끌었다." },
+    { "year": 1949, "title": "코멧 첫 제트 여객기", "desc": "영국의 드 하빌랜드 코멧이 세계 최초의 제트 여객기로 첫 비행을 했다. 이후 금속 피로 파괴 사고가 발생해 구조 설계의 중요성을 일깨웠다." },
+    { "year": 1958, "title": "보잉 707 취항", "desc": "보잉 707이 대서양 횡단 노선에 투입되어 제트 여객기 시대를 본격적으로 열었다. 비행시간이 프로펠러기의 절반 수준으로 줄었다." },
+    { "year": 1969, "title": "보잉 747 첫 비행", "desc": "보잉 747은 최초의 광폭동체 점보제트로 대량 수송 시대를 열었다. 장거리 항공 요금을 낮춰 대중 여행을 가능하게 했다." },
+    { "year": 1976, "title": "콩코드 취항", "desc": "영국과 프랑스가 공동 개발한 초음속 여객기 콩코드가 마하 2로 대서양을 횡단했다. 높은 연료비와 소음 문제로 2003년에 퇴역했다." },
+    { "year": 1988, "title": "A320 플라이바이와이어", "desc": "에어버스 A320은 여객기 최초로 조종 입력을 전기 신호로 처리하는 플라이바이와이어를 상용화했다. 컴퓨터가 비행 한계를 보호해 안전성과 효율이 높아졌다." },
+    { "year": 2007, "title": "A380 상업운항", "desc": "전 길이 2층 구조의 A380이 싱가포르항공으로 첫 상업운항을 시작했다. 세계에서 가장 큰 여객기로 500명 이상을 수송한다." },
+    { "year": 2011, "title": "보잉 787 드림라이너", "desc": "탄소섬유 복합재를 대량 적용한 787이 상업운항에 들어갔다. 연료 효율과 객실 환경을 크게 개선한 중대형 기종이다." }
+  ]
+};
+
+</script>
+
+<script>
+const PLANES=[...(window.PLANES_A||[]),...(window.PLANES_B||[])];
+const L=window.LEARN||{forces:[],parts:[],journey:[],quiz:[],history:[]};
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+const fmt=n=>n==null||n===''?'—':Number(n).toLocaleString('ko-KR');
+const byId=id=>PLANES.find(p=>p.id===id);
+
+/* ---------- geometry spec (meters, nose = +x) ---------- */
+function spec(p){
+  const Lf=p.length,W=p.wingspan,c=p.category||'',id=p.id;
+  const sup=c==='초음속기',prop=c==='프로펠러기',wide=c.indexOf('쌍통로')===0,reg=c==='지역 제트기';
+  const R=id==='a380'?3.55:wide?2.85:reg?1.5:prop?1.35:sup?1.45:1.95;
+  const s={L:Lf,W,R,sup,prop,wide,id,high:id==='atr72',ttail:id==='atr72',eng:p.engines||2};
+  s.nL=sup?0.16*Lf:2.3*R; s.tL=(sup?0.12:prop?0.3:0.24)*Lf;
+  s.sweep=sup?0:prop?(id==='dc3'?0.15:0.03):id==='b707'?0.68:0.58;
+  s.leX=(prop?0.62:0.6)*Lf; s.cr=(prop?0.16:0.2)*Lf; s.ct=s.cr*(prop?0.45:0.27);
+  if(sup) s.wing=[[0.74*Lf,R],[0.45*Lf,0.3*W],[0.17*Lf,0.5*W],[0.03*Lf,0.5*W],[0.03*Lf,R]];
+  else{const tz=W/2,tle=s.leX-(tz-R)*s.sweep;s.wing=[[s.leX,R],[tle,tz],[tle-s.ct,tz],[s.leX-s.cr,R]]}
+  s.fh=sup?0.11*Lf:Math.max(2.6*R,0.16*Lf);
+  const fx0=0.02*Lf,fTopTE=fx0-s.fh*0.25,fTopLE=fTopTE+0.085*Lf;
+  s.fin=[[0.23*Lf,0],[fx0,0],[fTopTE,s.fh],[fTopLE,s.fh]];
+  if(!sup){const hs=s.ttail?0.13*W:Math.min(0.17*W,0.2*Lf),hLE=0.2*Lf,hcr=0.11*Lf,hsw=prop?0.15:0.65;
+    let sh=s.ttail?(fTopLE+0.02*Lf)-hLE:0;
+    s.hstab=[[hLE+sh,0],[hLE-hs*hsw+sh,hs],[hLE-hs*hsw-hcr*0.45+sh,hs],[hLE-hcr+sh,0]];}
+  s.eR=sup?0.6:prop?R*0.42:R*0.47; s.nl=prop?s.eR*5.5:s.eR*3.6;
+  s.engZ=sup?[R+1.3,R+2.7]:(s.eng>=4?[0.37*W/2,0.66*W/2]:[(prop?0.34:0.33)*W/2]);
+  return s;
+}
+const rAt=(s,x)=>{if(x>=s.L)return 0;if(x>s.L-s.nL){const u=(s.L-x)/s.nL;return s.R*(s.sup?Math.pow(u,.85):Math.sqrt(u*(2-u)))}
+  if(x<s.tL){const u=x/s.tL;return s.R*(0.15+0.85*Math.pow(u,0.6))}return s.R};
+const upAt=(s,x)=>x<s.tL?Math.pow(1-x/s.tL,1.5)*s.R*(s.sup?0.2:0.55):0;
+const xle=(s,z)=>s.leX-(z-s.R)*s.sweep;
+function engX(s,z){if(s.sup)return 0.13*s.L;const f=xle(s,z)+s.nl*(s.prop?0.45:0.55);return f-s.nl/2}
+
+/* ---------- top view SVG ---------- */
+function topGroup(p,o={}){
+  const s=spec(p),f=o.fill||'url(#tg)',st=o.stroke||'none',sw=o.sw||0,acc=p.color||'#2ee6ff';
+  const pts=[];for(let i=0;i<=60;i++){const x=i/60*s.L;pts.push([x,-rAt(s,x)])}
+  for(let i=60;i>=0;i--){const x=i/60*s.L;pts.push([x,rAt(s,x)])}
+  const poly=(a,m=1)=>a.map(([x,y])=>`${x.toFixed(2)},${(y*m).toFixed(2)}`).join(' ');
+  let g='';
+  const attr=`fill="${f}" stroke="${st}" stroke-width="${sw}" stroke-linejoin="round"`;
+  g+=`<polygon points="${poly(s.wing)}" ${attr}/><polygon points="${poly(s.wing,-1)}" ${attr}/>`;
+  if(s.hstab)g+=`<polygon points="${poly(s.hstab)}" ${attr}/><polygon points="${poly(s.hstab,-1)}" ${attr}/>`;
+  for(const z of s.engZ)for(const m of[1,-1]){
+    if(s.sup)g+=`<rect x="${0.03*s.L}" y="${m*z-0.7}" width="${0.2*s.L}" height="1.4" rx=".4" fill="${o.eng||'#8e9bb5'}" stroke="${st}" stroke-width="${sw}"/>`;
+    else{const cx=engX(s,z);g+=`<rect x="${cx-s.nl/2}" y="${m*z-s.eR}" width="${s.nl}" height="${s.eR*2}" rx="${s.eR*.6}" fill="${o.eng||'#8e9bb5'}" stroke="${st}" stroke-width="${sw}"/><rect x="${cx+s.nl/2-s.nl*.12}" y="${m*z-s.eR}" width="${s.nl*.12}" height="${s.eR*2}" rx="${s.eR*.3}" fill="${acc}"/>`}}
+  g+=`<polygon points="${poly(pts)}" ${attr}/>`;
+  g+=`<rect x="${0.02*s.L}" y="-0.2" width="${0.21*s.L}" height=".4" fill="${acc}"/>`;
+  g+=`<path d="M${s.L-s.nL*.55},${-s.R*.35} Q${s.L-s.nL*.25},0 ${s.L-s.nL*.55},${s.R*.35}" stroke="#0b1430" stroke-width="${s.R*.18}" fill="none"/>`;
+  return {g,s};
+}
+function topSVG(p){
+  const {g,s}=topGroup(p),pad=2;
+  return `<svg viewBox="${-pad} ${-s.W/2-pad} ${s.L+pad*2} ${s.W+pad*2}" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="tg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset=".5" stop-color="#dfe6f3"/><stop offset="1" stop-color="#9aa8c4"/></linearGradient></defs>${g}</svg>`;
+}
+
+/* ---------- side view SVG ---------- */
+function sideGroup(p,o={}){
+  const s=spec(p),acc=p.color||'#2ee6ff',bp=o.blue;
+  const F=bp?'#2ee6ff12':'url(#sg)',S=bp?'#2ee6ff':'none',SW=bp?.12:0;
+  const top=[],bot=[];for(let i=0;i<=70;i++){const x=i/70*s.L,r=rAt(s,x),u=upAt(s,x);top.push([x,-u-r]);bot.push([x,-u+r])}
+  const P=a=>a.map(([x,y])=>`${x.toFixed(2)},${y.toFixed(2)}`).join(' ');
+  let g='';
+  const fb=-s.R*0.55;
+  g+=`<polygon points="${P(s.fin.map(([x,y])=>[x,fb-y]))}" fill="${bp?F:acc}" stroke="${S}" stroke-width="${SW}"/>`;
+  if(s.hstab){const hx=s.hstab[0][0],hy=s.ttail?fb-s.fh:-upAt(s,0.12*s.L)*.6;
+    g+=`<ellipse cx="${hx-0.07*s.L}" cy="${hy}" rx="${0.08*s.L}" ry="${Math.max(.18,s.R*.1)}" fill="${bp?F:'#c7d0e2'}" stroke="${S}" stroke-width="${SW}"/>`}
+  const wy=s.high?-s.R*.85:s.R*.55;
+  g+=`<polygon points="${s.leX},${wy} ${s.leX-s.cr},${wy+.15} ${s.leX-s.cr*.85},${wy+s.R*.22} ${s.leX-s.cr*.1},${wy+s.R*.2}" fill="${bp?F:'#c7d0e2'}" stroke="${S}" stroke-width="${SW}"/>`;
+  if(o.gear){const gx=[s.L-s.nL-1.2,s.leX-s.cr*.75];for(const x of gx){g+=`<line x1="${x}" y1="${s.R*.7}" x2="${x}" y2="${s.R+1.6}" stroke="${bp?S:'#556'}" stroke-width=".3"/><circle cx="${x}" cy="${s.R+1.9}" r=".75" fill="${bp?'#071431':'#223'}" stroke="${S}" stroke-width="${SW}"/>`}}
+  g+=`<polygon points="${P(top)} ${P(bot.slice().reverse())}" fill="${F}" stroke="${S}" stroke-width="${SW}"/>`;
+  if(!bp){g+=`<polygon points="${P(top.filter(([x])=>x>s.tL*.6&&x<s.L-s.nL*.4).map(([x,y])=>[x,y]))} ${P(top.filter(([x])=>x>s.tL*.6&&x<s.L-s.nL*.4).reverse().map(([x,y])=>[x,y+s.R*.05]))}" fill="${acc}" opacity=".0"/>`;
+    g+=`<rect x="${s.tL*.7}" y="${-s.R*.02}" width="${s.L-s.nL*.5-s.tL*.7}" height="${s.R*.09}" fill="${acc}"/>`;
+    for(let x=s.tL+.6;x<s.L-s.nL-.4;x+=Math.max(.9,s.L/70))g+=`<rect x="${x}" y="${-s.R*.38}" width="${Math.max(.3,s.L/220)}" height="${s.R*.17}" rx=".12" fill="#0b1430"/>`;}
+  g+=`<path d="M${s.L-s.nL*.78},${-s.R*.52} L${s.L-s.nL*.42},${-s.R*.42} L${s.L-s.nL*.4},${-s.R*.24} L${s.L-s.nL*.8},${-s.R*.3}Z" fill="${bp?'none':'#0b1430'}" stroke="${S}" stroke-width="${SW}"/>`;
+  for(const z of s.engZ.slice(0,1)){
+    if(s.sup){g+=`<rect x="${0.03*s.L}" y="${s.R*.55}" width="${0.2*s.L}" height="${s.R*.6}" fill="${bp?F:'#9aa6bf'}" stroke="${S}" stroke-width="${SW}"/>`;continue}
+    const cx=engX(s,z),ey=s.high?-s.R*.85-s.eR*.2:wy+s.eR*.9;
+    g+=`<rect x="${cx-s.nl/2}" y="${ey-s.eR}" width="${s.nl}" height="${s.eR*2}" rx="${s.eR*.7}" fill="${bp?F:'#9aa6bf'}" stroke="${S}" stroke-width="${SW}"/>`;
+    if(!bp)g+=`<rect x="${cx+s.nl/2-s.nl*.14}" y="${ey-s.eR}" width="${s.nl*.14}" height="${s.eR*2}" rx="${s.eR*.4}" fill="${acc}"/>`;
+    if(s.prop)g+=`<ellipse cx="${cx+s.nl/2+.2}" cy="${ey}" rx=".25" ry="${s.W*.07}" fill="#ffffff55"><animate attributeName="ry" values="${s.W*.07};${s.W*.01};${s.W*.07}" dur=".12s" repeatCount="indefinite"/></ellipse>`;
+  }
+  const minY=-s.R*.55-s.fh-1,maxY=s.R+(o.gear?3:1.6);
+  return {g,s,minY,maxY,wy};
+}
+function sideSVG(p,o={}){const {g,s,minY,maxY}=sideGroup(p,o);return `<svg viewBox="-1 ${minY} ${s.L+2} ${maxY-minY}" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="sg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset=".6" stop-color="#e3e9f4"/><stop offset="1" stop-color="#a7b3cc"/></linearGradient></defs>${g}</svg>`}
+
+/* ---------- 3D ---------- */
+const HAS3D=!!window.THREE;
+function build3D(p){
+  const s=spec(p),T=THREE,g=new T.Group(),inner=new T.Group();g.add(inner);
+  const M=(c,m,r)=>new T.MeshStandardMaterial({color:c,metalness:m,roughness:r});
+  const white=M(0xf3f6fb,.25,.32),acc=M(new T.Color(p.color||'#2ee6ff'),.35,.35),grey=M(0xaab2c2,.7,.28),dark=M(0x0a0f1d,.3,.15),belly=M(0xc9d0dc,.3,.4);
+  // fuselage
+  const pts=[new T.Vector2(0,0)];for(let i=0;i<=90;i++){const x=i/90*s.L;pts.push(new T.Vector2(Math.max(rAt(s,x),0.0001),x))}pts.push(new T.Vector2(0,s.L));
+  const fg=new T.LatheGeometry(pts,56);fg.rotateZ(-Math.PI/2);
+  const pa=fg.attributes.position;for(let i=0;i<pa.count;i++){const x=pa.getX(i);pa.setY(i,pa.getY(i)+upAt(s,x))}
+  fg.computeVertexNormals();inner.add(new T.Mesh(fg,white));
+  // slabs
+  const slab=(pts2,th,mat,mirror)=>{const sh=new T.Shape(pts2.map(([a,b])=>new T.Vector2(a,mirror?-b:b)));
+    const ge=new T.ExtrudeGeometry(sh,{depth:th,bevelEnabled:true,bevelThickness:th*.35,bevelSize:th*.35,bevelSegments:2,steps:1});ge.rotateX(Math.PI/2);ge.translate(0,th/2,0);return new T.Mesh(ge,mat)};
+  const wy=s.high?s.R*.85:-s.R*.5,th=Math.max(.18,s.R*.11),dih=s.high?.015:.06;
+  for(const m of[1,-1]){const w=slab(s.wing,th,white,m<0);w.position.y=wy;w.rotation.x=-m*dih;inner.add(w);
+    if(!s.sup&&!s.prop&&p.firstFlight>1985&&s.id!=='b787'&&s.id!=='b777'){const tip=s.wing[1],wl=new T.Mesh(new T.BoxGeometry(s.ct*.8,s.R*.9,.1),acc);wl.position.set(tip[0]-s.ct*.45,wy+s.R*.45+(tip[1])*Math.sin(dih),m*tip[1]);wl.rotation.z=.35;inner.add(wl)}}
+  // fin
+  {const sh=new T.Shape(s.fin.map(([a,b])=>new T.Vector2(a,b)));const ge=new T.ExtrudeGeometry(sh,{depth:.26,bevelEnabled:true,bevelThickness:.08,bevelSize:.08,bevelSegments:1});ge.translate(0,0,-.13);
+   const fm=new T.Mesh(ge,acc);fm.position.y=s.R*.55+upAt(s,0.1*s.L)*.85;inner.add(fm);
+   if(s.hstab)for(const m of[1,-1]){const h=slab(s.hstab,.16,white,m<0);h.position.y=s.ttail?fm.position.y+s.fh:upAt(s,0.12*s.L)*.7;h.rotation.x=-m*.05;inner.add(h)}}
+  // engines
+  g.userData.props=[];
+  for(const z of s.engZ)for(const m of[1,-1]){
+    if(s.sup){const b=new T.Mesh(new T.BoxGeometry(.2*s.L,1.1,1.2),grey);b.position.set(.13*s.L,wy-.75,m*z);inner.add(b);continue}
+    const cx=engX(s,z),zz=m*z,ey=s.high?wy-s.eR*.1:wy-s.eR*1.05+(z*Math.sin(dih));
+    const nac=new T.Mesh(new T.CylinderGeometry(s.eR*(s.prop?.75:1),s.eR*.78,s.nl,36),s.prop?white:grey);nac.rotation.z=Math.PI/2;nac.position.set(cx,ey,zz);inner.add(nac);
+    if(!s.prop){const lip=new T.Mesh(new T.TorusGeometry(s.eR*.93,s.eR*.09,12,36),acc);lip.rotation.y=Math.PI/2;lip.position.set(cx+s.nl/2,ey,zz);inner.add(lip);
+      const fan=new T.Mesh(new T.CircleGeometry(s.eR*.9,36),dark);fan.rotation.y=Math.PI/2;fan.position.set(cx+s.nl/2-.05,ey,zz);inner.add(fan);
+      const cone=new T.Mesh(new T.ConeGeometry(s.eR*.25,s.eR*.5,20),grey);cone.rotation.z=-Math.PI/2;cone.position.set(cx+s.nl/2+.05,ey,zz);inner.add(cone);
+      const py=new T.Mesh(new T.BoxGeometry(s.nl*.6,Math.abs(wy-ey),.18),white);py.position.set(cx-s.nl*.1,(wy+ey)/2,zz);inner.add(py)}
+    else{const sp=new T.Mesh(new T.ConeGeometry(s.eR*.45,s.eR*1.1,20),acc);sp.rotation.z=-Math.PI/2;sp.position.set(cx+s.nl/2+s.eR*.5,ey,zz);inner.add(sp);
+      const pr=new T.Group();pr.position.set(cx+s.nl/2+s.eR*.3,ey,zz);const nb=s.id==='atr72'?6:3,len=s.W*.075;
+      for(let i=0;i<nb;i++){const b=new T.Mesh(new T.BoxGeometry(.06,len,.32),dark);b.position.y=len/2;const h=new T.Group();h.rotation.x=i/nb*Math.PI*2;h.add(b);pr.add(h)}
+      inner.add(pr);g.userData.props.push(pr)}}
+  // windows
+  const wins=[];const step=Math.max(.95,s.L/75);
+  for(let x=s.tL+.8;x<s.L-s.nL-.5;x+=step){wins.push([x,s.R*.28,.968]);if(s.id==='a380')wins.push([x,s.R*.66,.75])}
+  if(s.id==='b747')for(let x=s.L-s.nL-s.L*.28;x<s.L-s.nL;x+=step)wins.push([x,s.R*.66,.75]);
+  const im=new T.InstancedMesh(new T.BoxGeometry(Math.min(.32,step*.4),s.R*.15,.12),dark,wins.length*2);
+  const mx=new T.Matrix4();let k=0;for(const [x,y,zf] of wins)for(const m of[1,-1]){mx.makeTranslation(x,y,m*s.R*zf);im.setMatrixAt(k++,mx)}inner.add(im);
+  // cheatline + windscreen
+  for(const m of[1,-1]){const cl=new T.Mesh(new T.BoxGeometry(s.L-s.nL-s.tL,s.R*.07,.06),acc);cl.position.set((s.L-s.nL+s.tL)/2,s.R*.05,m*s.R*.995);inner.add(cl)}
+  {const x=s.L-s.nL*.6,r=rAt(s,x);const ws=new T.Mesh(new T.BoxGeometry(s.nL*.28,r*.22,r*1.25),dark);ws.position.set(x,r*.62,0);ws.rotation.z=-.42;inner.add(ws)}
+  // hump for 747
+  if(s.id==='b747'){const hg=new T.SphereGeometry(1,32,16,0,Math.PI*2,0,Math.PI/2);hg.scale(s.L*.17,s.R*.42,s.R*.78);const h=new T.Mesh(hg,white);h.position.set(s.L-s.nL-s.L*.1,s.R*.62,0);inner.add(h)}
+  inner.position.set(-s.L/2,0,0);
+  g.scale.setScalar(11/Math.max(s.L,s.W));
+  return g;
+}
+function softTex(){const c=document.createElement('canvas');c.width=c.height=128;const x=c.getContext('2d');const gr=x.createRadialGradient(64,64,0,64,64,64);gr.addColorStop(0,'rgba(255,255,255,1)');gr.addColorStop(.4,'rgba(255,255,255,.55)');gr.addColorStop(1,'rgba(255,255,255,0)');x.fillStyle=gr;x.fillRect(0,0,128,128);return new THREE.CanvasTexture(c)}
+function makeViewer(cv,opt){
+  if(!HAS3D)return null;const T=THREE;
+  const r=new T.WebGLRenderer({canvas:cv,antialias:true,alpha:true});r.setPixelRatio(Math.min(devicePixelRatio,2));
+  r.outputEncoding=T.sRGBEncoding;r.toneMapping=T.ACESFilmicToneMapping;r.toneMappingExposure=1.05;
+  const sc=new T.Scene(),cam=new T.PerspectiveCamera(opt.fov||32,1,.1,300);cam.position.set(...opt.cam);cam.lookAt(...(opt.look||[0,0,0]));
+  sc.add(new T.HemisphereLight(0xcfe3ff,0x3a2a2a,.85));
+  const sun=new T.DirectionalLight(opt.sun||0xffe0bd,1.7);sun.position.set(6,10,8);sc.add(sun);
+  const rim=new T.DirectionalLight(0x6fa8ff,.9);rim.position.set(-8,3,-10);sc.add(rim);
+  if(opt.grid){const gh=new T.GridHelper(40,40,0x2ee6ff,0x16406e);gh.position.y=-3.2;gh.material.transparent=true;gh.material.opacity=.45;sc.add(gh)}
+  const st={model:null,yaw:0,pitch:0,dy:0,dp:0,drag:false,lx:0,ly:0,active:true,t:0};
+  const clouds=[],streaks=[];
+  if(opt.clouds){const tex=softTex();for(let i=0;i<70;i++){const m=new T.SpriteMaterial({map:tex,color:i%3?0xffe6d6:0xffffff,transparent:true,opacity:.35+Math.random()*.35,depthWrite:false});
+      const sp=new T.Sprite(m);const sz=4+Math.random()*9;sp.scale.set(sz*1.8,sz,1);sp.position.set(-40+Math.random()*80,-11+Math.random()*6+(Math.random()<.2?7:0),-40+Math.random()*36);sc.add(sp);clouds.push(sp)}
+    const lg=new T.BufferGeometry(),arr=new Float32Array(40*6);lg.setAttribute('position',new T.BufferAttribute(arr,3));
+    for(let i=0;i<40;i++)streaks.push({x:-30+Math.random()*60,y:-4+Math.random()*9,z:-12+Math.random()*16,l:1+Math.random()*3});
+    const ls=new T.LineSegments(lg,new T.LineBasicMaterial({color:0xffffff,transparent:true,opacity:.28}));sc.add(ls);st.ls=ls}
+  function size(){const w=cv.clientWidth,h=cv.clientHeight;if(!w||!h)return;r.setSize(w,h,false);cam.aspect=w/h;cam.updateProjectionMatrix()}
+  new ResizeObserver(size).observe(cv);size();
+  cv.addEventListener('pointerdown',e=>{st.drag=true;st.lx=e.clientX;st.ly=e.clientY;cv.setPointerCapture(e.pointerId)});
+  cv.addEventListener('pointermove',e=>{if(!st.drag)return;st.dy+=(e.clientX-st.lx)*.008;st.dp+=(e.clientY-st.ly)*.005;st.dp=Math.max(-.9,Math.min(.9,st.dp));st.lx=e.clientX;st.ly=e.clientY});
+  cv.addEventListener('pointerup',()=>st.drag=false);
+  let last=performance.now();
+  (function loop(n){requestAnimationFrame(loop);const dt=Math.min(.05,(n-last)/1000);last=n;if(!st.active)return;st.t+=dt;
+    if(st.model){const m=st.model;
+      if(opt.auto&&!st.drag)st.dy+=dt*.35;
+      if(!opt.auto&&!st.drag){st.dy*=.985;st.dp*=.97}
+      m.rotation.set(0,0,0);m.rotateY((opt.yaw0||0)+st.dy);m.rotateX(st.dp);
+      if(opt.clouds){m.rotateX(Math.sin(st.t*.5)*.1);m.rotateZ(Math.sin(st.t*.33)*.04+.03);m.position.y=Math.sin(st.t*.7)*.25}
+      for(const pr of m.userData.props)pr.rotation.x+=dt*40}
+    if(opt.clouds){for(const c of clouds){c.position.x-=dt*18*(1+(c.position.z+30)/40);if(c.position.x<-45)c.position.x=45}
+      const a=st.ls.geometry.attributes.position.array;streaks.forEach((s2,i)=>{s2.x-=dt*60;if(s2.x<-30)s2.x=30;a.set([s2.x,s2.y,s2.z,s2.x+s2.l,s2.y,s2.z],i*6)});st.ls.geometry.attributes.position.needsUpdate=true}
+    r.render(sc,cam)})(last);
+  return{st,set(p){if(st.model){sc.remove(st.model);st.model.traverse(o=>{o.geometry&&o.geometry.dispose()})}st.model=build3D(p);sc.add(st.model);st.dy=0;st.dp=0},size};
+}
+
+/* ---------- scroll fx ---------- */
+addEventListener('scroll',()=>{const h=document.documentElement;$('#prog').style.width=(scrollY/(h.scrollHeight-innerHeight)*100)+'%';$('#nav').classList.toggle('solid',scrollY>40);
+  let cur='';$$('section').forEach(s=>{if(scrollY>=s.offsetTop-160)cur=s.id});$$('nav a').forEach(a=>a.classList.toggle('on',a.getAttribute('href')==='#'+cur))},{passive:true});
+const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('show');io.unobserve(e.target)}}),{threshold:.12});
+function observe(){$$('.reveal:not(.show)').forEach(el=>io.observe(el))}
+
+/* ---------- HERO ---------- */
+const heroIds=['b747','a380','b787','concorde','a350','atr72'].filter(byId);
+const hv=makeViewer($('#heroCv'),{cam:[14,3.2,17.5],look:innerWidth>900?[-4.2,-1.6,0]:[0,-2.2,0],clouds:true,yaw0:-.25});
+let roT=0,roTarget={spd:0,alt:0};
+function heroSet(id){const p=byId(id);if(!p)return;$$('.mbtn').forEach(b=>b.classList.toggle('on',b.dataset.id===id));
+  if(hv)hv.set(p);else $('#heroCv').outerHTML=`<div style="position:absolute;inset:15% 10% 35% 35%">${topSVG(p)}</div>`;
+  $('#roName').textContent=(p.code||p.name)+' · '+p.name;roTarget={spd:p.speed,alt:Math.round((p.ceiling?p.ceiling*3.281*.88:37000)/100)*100}}
+$('#models').innerHTML=heroIds.map(id=>`<button class="mbtn" data-id="${id}">${byId(id).code||byId(id).name}</button>`).join('');
+$('#models').onclick=e=>{const b=e.target.closest('.mbtn');if(b)heroSet(b.dataset.id)};
+heroSet(heroIds[0]);
+if(hv)new IntersectionObserver(es=>{hv.st.active=es[0].isIntersecting}).observe($('#hero'));
+let cs={spd:0,alt:0,hdg:87};
+setInterval(()=>{cs.spd+=(roTarget.spd-cs.spd)*.12+(Math.random()-.5)*2;cs.alt+=(roTarget.alt-cs.alt)*.1+(Math.random()-.5)*20;cs.hdg=(cs.hdg+(Math.random()-.5)*.6+360)%360;
+  $('#roSpd').textContent=Math.round(cs.spd)+' KM/H';$('#roAlt').textContent=fmt(Math.round(cs.alt/10)*10);$('#roHdg').textContent=String(Math.round(cs.hdg)).padStart(3,'0')+'°'},120);
+
+/* ---------- FLEET ---------- */
+const cats=['전체',...new Set(PLANES.map(p=>p.category))];let cat='전체';
+$('#chips').innerHTML=cats.map(c=>`<button class="chip${c==='전체'?' on':''}" data-c="${c}">${c}</button>`).join('');
+$('#chips').onclick=e=>{const b=e.target.closest('.chip');if(!b)return;cat=b.dataset.c;$$('#chips .chip').forEach(x=>x.classList.toggle('on',x===b));render()};
+$('#q').oninput=render;$('#sort').onchange=render;
+const stc=s=>s==='운항 중'?'live':s==='은퇴'?'ret':'part';
+const stEn=s=>s==='운항 중'?'IN SERVICE':s==='은퇴'?'RETIRED':'LIMITED';
+function tilt(el){el.addEventListener('pointermove',e=>{const b=el.getBoundingClientRect(),x=(e.clientX-b.left)/b.width,y=(e.clientY-b.top)/b.height;
+  el.style.transform=`rotateY(${(x-.5)*18}deg) rotateX(${(.5-y)*14}deg) translateZ(10px)`;el.style.setProperty('--mx',x*100+'%');el.style.setProperty('--my',y*100+'%')});
+  el.addEventListener('pointerleave',()=>el.style.transform='')}
+function render(){
+  const q=$('#q').value.trim().toLowerCase(),k=$('#sort').value;
+  const list=PLANES.filter(p=>(cat==='전체'||p.category===cat)&&(!q||[p.name,p.nick,p.maker,p.code,p.country].join(' ').toLowerCase().includes(q)))
+    .sort((a,b)=>k==='firstFlight'?a.firstFlight-b.firstFlight:(b[k]||0)-(a[k]||0));
+  $('#grid').innerHTML=list.length?list.map((p,i)=>`<div class="glow card reveal" style="transition-delay:${i%4*60}ms" data-id="${p.id}" tabindex="0"><div class="in"><div class="light"></div>
+    <div class="ctop"><span class="code">${p.code||p.id.toUpperCase()}</span><span class="st ${stc(p.status)}">${stEn(p.status)}</span></div>
+    <div class="pic">${topSVG(p)}</div>
+    <h3>${p.name}</h3><div class="nick">${p.nick} · ${p.maker} · ${p.firstFlight}</div>
+    <div class="spec3"><div><b>${fmt(p.seats)}</b><span>SEATS</span></div><div><b>${fmt(p.speed)}</b><span>KM/H</span></div><div><b>${fmt(p.range)}</b><span>RANGE KM</span></div></div></div></div>`).join(''):'<div class="empty">검색 결과가 없어요.</div>';
+  $$('#grid .card').forEach(c=>{tilt(c);c.onclick=()=>openP(c.dataset.id);c.onkeydown=e=>{if(e.key==='Enter')openP(c.dataset.id)}});observe();
+}
+const mx=k=>Math.max(...PLANES.map(p=>p[k]||0));
+const BARS=[['seats','좌석 수','석'],['length','기체 길이','m'],['wingspan','날개폭','m'],['speed','순항 속도','km/h'],['range','항속 거리','km'],['mtow','최대이륙중량','t']];
+let mv=null;
+function openP(id){const p=byId(id);if(!p)return;
+  $('#vlab').innerHTML=`<span class="code">${p.code||''}</span><h3>${p.name}</h3><div class="nick">${p.nick}</div>`;
+  $('#mdet').innerHTML=`<div class="tbl">
+    <div><span>MANUFACTURER</span><b>${p.maker}</b></div><div><span>COUNTRY</span><b>${p.country}</b></div>
+    <div><span>FIRST FLIGHT</span><b>${p.firstFlight}년</b></div><div><span>STATUS</span><b>${p.status}</b></div>
+    <div><span>ENGINES</span><b>${p.engines}발${p.engine?' · '+p.engine:''}</b></div><div><span>CATEGORY</span><b>${p.category}</b></div>
+    <div><span>MTOW</span><b>${p.mtow?fmt(p.mtow)+' t':'—'}</b></div><div><span>SERVICE CEILING</span><b>${p.ceiling?fmt(p.ceiling)+' m':'—'}</b></div></div>
+    <p class="sum">${p.summary}</p>
+    <div class="lbl">PERFORMANCE · 전체 기종 중 최댓값 대비</div>
+    <div class="bars">${BARS.filter(([k])=>p[k]).map(([k,n,u])=>`<div class="bar"><label>${n}<b>${fmt(p[k])} ${u}</b></label><div class="t"><div class="f" data-w="${p[k]/mx(k)*100}"></div></div></div>`).join('')}</div>
+    <div class="lbl">ENGINEERING NOTES</div><ol class="facts">${(p.facts||[]).map(f=>`<li><span>${f}</span></li>`).join('')}</ol>
+    ${p.korea?`<div class="note"><b>국내 운용</b> · ${p.korea}</div>`:''}
+    ${p.word?`<div class="note" style="border-color:var(--c1);background:#2ee6ff10"><b>용어 · ${p.word.term}</b><br>${p.word.meaning}</div>`:''}`;
+  $('#modal').classList.add('open');document.body.style.overflow='hidden';$('#mdet').scrollTop=0;
+  if(HAS3D){if(!mv)mv=makeViewer($('#mCv'),{cam:[9,3.4,10.5],look:[0,-.3,0],grid:true,auto:true,fov:34,sun:0xffffff});mv.st.active=true;mv.set(p);setTimeout(mv.size,30)}
+  else $('#mview').insertAdjacentHTML('afterbegin',`<div style="position:absolute;inset:20%">${topSVG(p)}</div>`);
+  setTimeout(()=>$$('#mdet .f').forEach(f=>f.style.width=f.dataset.w+'%'),120);
+}
+function closeM(){$('#modal').classList.remove('open');document.body.style.overflow='';if(mv)mv.st.active=false}
+$('#mclose').onclick=closeM;$('#modal').onclick=e=>{if(e.target.id==='modal')closeM()};addEventListener('keydown',e=>{if(e.key==='Escape')closeM()});
+render();
+
+/* ---------- SCALE ---------- */
+const opts=PLANES.map(p=>`<option value="${p.id}">${p.code||''} · ${p.name}</option>`).join('');
+$('#ca').innerHTML=opts;$('#cb').innerHTML=opts;$('#ca').value=byId('a380')?'a380':PLANES[0].id;$('#cb').value=byId('b737')?'b737':PLANES[1].id;
+function cmp(){const a=byId($('#ca').value),b=byId($('#cb').value);if(!a||!b)return;
+  const ML=Math.max(a.length,b.length),MW=Math.max(a.wingspan,b.wingspan),pad=6,VW=ML+pad*2+16,VH=MW+pad*2;
+  const ga=topGroup(a,{fill:'#2ee6ff1c',stroke:'#2ee6ff',sw:.18,eng:'#2ee6ff30'}),gb=topGroup(b,{fill:'#ffb34722',stroke:'#ffb347',sw:.18,eng:'#ffb34730'});
+  let grid='';for(let x=0;x<=VW;x+=5)grid+=`<line x1="${x}" y1="0" x2="${x}" y2="${VH}"/>`;for(let y=0;y<=VH;y+=5)grid+=`<line x1="0" y1="${y}" x2="${VW}" y2="${y}"/>`;
+  const ox=pad+16;
+  $('#bp').innerHTML=`<svg viewBox="0 0 ${VW} ${VH}"><g stroke="#2ee6ff" stroke-opacity=".1" stroke-width=".08">${grid}</g>
+   <g transform="translate(${ox+(ML-a.length)/2} ${VH/2})">${ga.g}</g><g transform="translate(${ox+(ML-b.length)/2} ${VH/2})">${gb.g}</g>
+   <g transform="translate(${pad*.5} ${VH-pad-2.5})"><rect width="12" height="2.5" rx=".4" fill="#8d99b3" opacity=".7"/><text x="0" y="-1" font-size="1.6" fill="#8d99b3" font-family="Rajdhani">BUS 12m</text></g>
+   <g transform="translate(${pad*.5} ${pad})" font-family="Rajdhani" font-size="1.8"><line x1="0" y1="0" x2="10" y2="0" stroke="#fff" stroke-width=".2"/><line x1="0" y1="-.8" x2="0" y2=".8" stroke="#fff" stroke-width=".2"/><line x1="10" y1="-.8" x2="10" y2=".8" stroke="#fff" stroke-width=".2"/><text x="2.6" y="2.6" fill="#fff">10 m</text></g>
+   <text x="${VW-pad}" y="${pad}" text-anchor="end" font-family="Rajdhani" font-size="2.2" fill="#2ee6ff">${a.code||a.name} · ${a.length}m × ${a.wingspan}m</text>
+   <text x="${VW-pad}" y="${pad+3}" text-anchor="end" font-family="Rajdhani" font-size="2.2" fill="#ffb347">${b.code||b.name} · ${b.length}m × ${b.wingspan}m</text></svg>`;
+  $('#crows').innerHTML=BARS.filter(([k])=>a[k]&&b[k]).map(([k,n,u])=>{const m=Math.max(a[k],b[k]);return `<div class="crow"><div class="l"><i style="width:${a[k]/m*100}%"></i></div><div class="m">${n} (${u})<b><span class="${a[k]>=b[k]?'wa':''}">${fmt(a[k])}</span><span>:</span><span class="${b[k]>=a[k]?'wb':''}">${fmt(b[k])}</span></b></div><div class="r"><i style="width:${b[k]/m*100}%"></i></div></div>`}).join('');}
+$('#ca').onchange=cmp;$('#cb').onchange=cmp;cmp();
+
+/* ---------- PHYSICS ---------- */
+const simP=byId('b787')||PLANES[0];
+$('#simplane').innerHTML=sideSVG(simP);
+(function(){const sky=$('#simsky');for(let i=0;i<6;i++){const c=document.createElement('div');c.className='cl';c.style.cssText=`top:${10+Math.random()*80}%;width:${120+Math.random()*200}px;animation-duration:${4+Math.random()*5}s;animation-delay:${-Math.random()*8}s;opacity:${.4+Math.random()*.5}`;sky.prepend(c)}
+  for(let i=0;i<14;i++){const s=document.createElement('div');s.className='sp1';s.style.cssText=`top:${Math.random()*100}%;width:${60+Math.random()*120}px;animation-duration:${.6+Math.random()*.8}s;animation-delay:${-Math.random()}s`;sky.prepend(s)}})();
+const FC={up:'#3dffa8',down:'#ff5c7a',forward:'#ffb347',back:'#2ee6ff'};
+$('#forces').innerHTML=L.forces.map(f=>{const c=FC[f.dir]||f.color;return `<div class="glow fc reveal"><div class="in"><h3 style="color:${c}">${f.name}<small>${(f.en||'').toUpperCase()}</small></h3><div class="bar2" style="background:${c};box-shadow:0 0 10px ${c}"></div><p>${f.desc}</p><p class="ex">${f.example||''}</p></div></div>`}).join('');
+let sim={alt:12000,vs:0,top:50,bank:0,t:0};
+function simCalc(){const t=+$('#thr').value,a=+$('#aoa').value;$('#tv').textContent=t+'%';$('#av').textContent=a+'°';
+  const spd=t*9.2,stall=a>=14||(a>=11&&t<45),lift=stall?t*.25:t*(0.35+a*0.07),W=38.5,drag=t*.3+a*a*.12;
+  let vs=Math.max(-3500,Math.min(3500,(lift-W)*95));if(t<12)vs=-1800;if(stall)vs=-3200;
+  let m,warn=false;
+  if(stall){m='STALL — 받음각이 임계각을 넘어 날개 윗면의 공기 흐름이 떨어져 나갔어요. 양력이 급격히 줄어 추락해요. 받음각을 줄이세요!';warn=true}
+  else if(t<12){m='추력이 거의 없어요. 속도가 떨어지면 양력도 함께 줄어들어요.';warn=true}
+  else if(vs>300)m='상승 중 — 양력이 무게보다 커요. 대신 받음각이 커질수록 유도항력도 커져요.';
+  else if(vs<-300)m='하강 중 — 무게가 양력보다 커요. 추력을 높이거나 받음각을 키워 보세요.';
+  else m='수평 순항 — 양력과 무게, 추력과 항력이 균형을 이루고 있어요.';
+  return{t,a,spd,lift,W,drag,vs,m,warn,stall}}
+function simDraw(){const c=simCalc();$('#msg').textContent=c.m;$('#msg').style.borderColor=c.warn?'var(--bad)':'var(--line)';$('#msg').style.color=c.warn?'#ffb3c0':'';
+  sim.vs=c.vs;const pitch=c.a*(c.stall?.6:1)+c.vs/600;
+  sim.top=50-Math.max(-28,Math.min(28,c.vs/110));
+  $('#simplane').style.top=sim.top+'%';$('#simplane').style.transform=`translate(-50%,-50%) rotate(${-pitch}deg)`;
+  const sc=v=>Math.max(12,Math.min(120,v*1.6));
+  $('#arws').innerHTML=`<div class="arw" style="left:50%;top:calc(${sim.top}% - 40px);transform:translate(-50%,-100%);flex-direction:column;color:${FC.up}"><span>LIFT</span><i style="width:6px;height:${sc(c.lift)}px;background:${FC.up};box-shadow:0 0 10px ${FC.up}"></i></div>
+   <div class="arw" style="left:50%;top:calc(${sim.top}% + 30px);transform:translateX(-50%);flex-direction:column;color:${FC.down}"><i style="width:6px;height:${sc(c.W)}px;background:${FC.down};box-shadow:0 0 10px ${FC.down}"></i><span>WEIGHT</span></div>
+   <div class="arw" style="left:calc(50% + 160px);top:${sim.top}%;transform:translateY(-50%);color:${FC.forward}"><i style="height:6px;width:${sc(c.t*.6)}px;background:${FC.forward};box-shadow:0 0 10px ${FC.forward}"></i><span>THRUST</span></div>
+   <div class="arw" style="right:calc(50% + 160px);top:${sim.top}%;transform:translateY(-50%);color:${FC.back}"><span>DRAG</span><i style="height:6px;width:${sc(c.drag*.8)}px;background:${FC.back};box-shadow:0 0 10px ${FC.back}"></i></div>`;
+  $('#rSpd').textContent=Math.round(c.spd);$('#rLw').textContent=(c.lift/c.W).toFixed(2);$('#rLw').className=c.stall?'warn':'';
+  sim.pitch=pitch}
+$('#thr').oninput=simDraw;$('#aoa').oninput=simDraw;simDraw();
+let lastS=performance.now();(function sl(n){requestAnimationFrame(sl);const dt=Math.min(.05,(n-lastS)/1000);lastS=n;sim.t+=dt;
+  sim.alt=Math.max(0,Math.min(45000,sim.alt+sim.vs*dt*.5));if(sim.alt===0&&sim.vs<0){}
+  const bank=Math.sin(sim.t*.6)*4;$('#hor').setAttribute('transform',`rotate(${bank} 150 150) translate(0 ${Math.max(-30,Math.min(30,sim.pitch||0))*4})`);
+  $('#rAlt').textContent=fmt(Math.round(sim.alt/10)*10);$('#rVs').textContent=(sim.vs>0?'+':'')+fmt(Math.round(sim.vs/10)*10);$('#rVs').className=sim.vs<-2500?'warn':''})(lastS);
+
+/* ---------- ANATOMY ---------- */
+(function(){const ref=byId('a350')||byId('b777')||PLANES[0];const {g,s,minY,maxY,wy}=sideGroup(ref,{blue:true,gear:true});
+  const fb=-s.R*.55,cx=engX(s,s.engZ[0]);
+  const H={cockpit:[s.L-s.nL*.6,-s.R*.4,'COCKPIT'],fuselage:[s.L*.55,-s.R*.1,'FUSELAGE'],wing:[s.leX-s.cr*.45,wy+s.R*.12,'WING'],engine:[cx,wy+s.eR*.9,'ENGINE'],
+    flap:[s.leX-s.cr*.92,wy+s.R*.12,'FLAP'],vtail:[s.fin[0][0]-s.L*.09,fb-s.fh*.55,'V-TAIL'],htail:[s.hstab?s.hstab[0][0]-0.07*s.L:4,-upAt(s,.12*s.L)*.6,'H-TAIL'],gear:[s.L-s.nL-1.2,s.R+1.9,'GEAR']};
+  const r=s.L/110,fs=s.L/55;
+  const hs=Object.entries(H).map(([k,[x,y,n]])=>`<g class="hs" data-z="${k}"><circle class="o" cx="${x}" cy="${y}" r="${r*2}" stroke-width="${r*.35}"/><circle class="c" cx="${x}" cy="${y}" r="${r*.9}"/><text x="${x+r*1.8}" y="${y-r*1.6}" font-size="${fs}">${n}</text><circle cx="${x}" cy="${y}" r="${r*4}" fill="transparent"/></g>`).join('');
+  const sv=$('#anaSvg');sv.setAttribute('viewBox',`-2 ${minY-2} ${s.L+6} ${maxY-minY+4}`);sv.innerHTML=g+hs;
+  $('#plist').innerHTML=L.parts.map(p=>`<button class="chip" data-z="${p.id}">${p.name}</button>`).join('');
+  function show(z){const p=L.parts.find(x=>x.id===z);if(!p)return;$('#pside').querySelector('.k').textContent=(H[z]||['','',''])[2];$('#pside').querySelector('h3').textContent=p.name;$('#pside').querySelector('p').textContent=p.desc;
+    $$('.hs').forEach(h=>h.classList.toggle('on',h.dataset.z===z));$$('#plist .chip').forEach(h=>h.classList.toggle('on',h.dataset.z===z))}
+  sv.onclick=e=>{const h=e.target.closest('.hs');if(h)show(h.dataset.z)};$('#plist').onclick=e=>{const h=e.target.closest('[data-z]');if(h)show(h.dataset.z)};})();
+
+/* ---------- PROFILE ---------- */
+(function(){const J=L.journey;if(!J.length)return;
+  const sv=$('#profSvg');const d='M20,240 L300,240 C380,240 420,60 520,52 L760,52 C840,52 880,240 930,240 L985,240';
+  let grid='';for(let y=52;y<=240;y+=47)grid+=`<line x1="20" y1="${y}" x2="985" y2="${y}" stroke="#ffffff10"/>`;
+  sv.innerHTML=`<defs><linearGradient id="pf" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2ee6ff" stop-opacity=".25"/><stop offset="1" stop-color="#2ee6ff" stop-opacity="0"/></linearGradient></defs>${grid}
+   <text x="22" y="46" font-family="Rajdhani" font-size="12" fill="#5a6680" letter-spacing="2">FL370</text><text x="22" y="262" font-family="Rajdhani" font-size="12" fill="#5a6680" letter-spacing="2">GROUND</text>
+   <path d="${d} L985,250 L20,250Z" fill="url(#pf)"/><path id="pp" d="${d}" fill="none" stroke="#2ee6ff" stroke-width="2.5" style="filter:drop-shadow(0 0 6px #2ee6ff)"/>
+   <path id="ppd" d="${d}" fill="none" stroke="#ffb347" stroke-width="3"/><g id="pdots"></g>
+   <g id="pplane"><path d="M14,0 L-10,-4 L-14,-12 L-18,-12 L-15,-2 L-18,0 L-15,2 L-18,12 L-14,12 L-10,4Z" fill="#fff" transform="rotate(0)"/></g>`;
+  const pp=$('#pp'),len=pp.getTotalLength(),T=[.03,.13,.25,.37,.58,.87,.985];
+  $('#ppd').style.strokeDasharray=len;$('#ppd').style.strokeDashoffset=len;$('#ppd').style.transition='stroke-dashoffset .9s ease';
+  $('#pdots').innerHTML=T.map((t,i)=>{const pt=pp.getPointAtLength(len*t);return `<circle cx="${pt.x}" cy="${pt.y}" r="5" fill="#04060d" stroke="#2ee6ff" stroke-width="2"/><text x="${pt.x}" y="${pt.y+(pt.y>200?-14:22)}" text-anchor="middle" font-family="Rajdhani" font-weight="700" font-size="12" fill="#8d99b3">${J[i]?J[i].icon:''}</text>`}).join('');
+  $('#steps').innerHTML=J.map((j,i)=>`<button class="step" data-i="${i}"><b>${j.icon}</b><small>${j.title}</small></button>`).join('');
+  let cur=0,anim=null;
+  function place(t){const pt=pp.getPointAtLength(len*t),p2=pp.getPointAtLength(Math.min(len,len*t+2)),ang=Math.atan2(p2.y-pt.y,p2.x-pt.x)*180/Math.PI;$('#pplane').setAttribute('transform',`translate(${pt.x} ${pt.y-8}) rotate(${ang})`)}
+  function go(i){const from=T[cur],to=T[i];cur=i;cancelAnimationFrame(anim);const st=performance.now();
+    (function f(n){const k=Math.min(1,(n-st)/900),e=1-Math.pow(1-k,3);place(from+(to-from)*e);if(k<1)anim=requestAnimationFrame(f)})(st);
+    $('#ppd').style.strokeDashoffset=len*(1-to);
+    $$('.step').forEach((b,k)=>b.classList.toggle('on',k===i));const j=J[i];$('#pT').textContent=`${String(i+1).padStart(2,'0')} · ${j.title}`;$('#pD').textContent=j.desc;
+    $('#pAlt').textContent=fmt(j.alt||0);$('#pSpd').textContent=fmt(j.spd||0)}
+  $('#steps').onclick=e=>{const b=e.target.closest('.step');if(b)go(+b.dataset.i)};place(T[0]);go(0);})();
+
+/* ---------- TIMELINE ---------- */
+$('#tl').innerHTML=L.history.map(h=>`<div class="ti glow reveal"><div class="in"><div class="yr">${h.year}</div><div><h3>${h.title}</h3><p>${h.desc}</p></div></div></div>`).join('');
+
+/* ---------- TEST ---------- */
+let qi=0,score=0,QS=[];
+function shuf(){QS=L.quiz.map(q=>{const idx=q.options.map((_,i)=>i).sort(()=>Math.random()-.5);return{...q,options:idx.map(i=>q.options[i]),answer:idx.indexOf(q.answer)}})}
+shuf();
+function qShow(){const Q=QS;if(!Q.length)return;
+  if(qi>=Q.length){const r=score/Q.length,n=r>=.9?4:r>=.7?3:r>=.45?2:1,R=[null,['비행 훈련생','CADET','기초 이론부터 다시 점검해 봐요. 도감과 물리 섹션이 도움이 될 거예요.'],['수습 부기장','SECOND OFFICER','기본기는 갖췄어요. 틀린 문제의 해설을 다시 읽어 보세요.'],['부기장','FIRST OFFICER','훌륭해요. 기장까지 한 걸음 남았어요.'],['기장','CAPTAIN','완벽에 가까워요. 비행기를 맡겨도 되겠어요.']][n];
+    $('#qbox').innerHTML=`<div class="res"><div class="hud" style="color:var(--sub);font-size:13px">RESULT · ${R[1]}</div><div class="epa">${'<i></i>'.repeat(n)}</div><div class="sc">${score}/${Q.length}</div><h3>${R[0]}</h3><p>${R[2]}</p><button class="btn" id="qre">다시 응시하기</button></div>`;
+    $('#qre').onclick=()=>{qi=0;score=0;shuf();qShow()};return}
+  const q=Q[qi];
+  $('#qbox').innerHTML=`<div class="qh"><span>QUESTION <b>${String(qi+1).padStart(2,'0')}</b> / ${Q.length}</span><span>SCORE <b>${score}</b></span></div><div class="qbar"><i style="width:${qi/Q.length*100}%"></i></div>
+   <div class="qq">${q.q}</div><div class="opts">${q.options.map((o,i)=>`<button class="opt" data-i="${i}"><span>${'ABCD'[i]}</span>${o}</button>`).join('')}</div><div class="exp" id="exp"></div>`;
+  $$('.opt').forEach(b=>b.onclick=()=>{const i=+b.dataset.i,ok=i===q.answer;if(ok)score++;
+    $$('.opt').forEach(x=>{x.disabled=true;if(+x.dataset.i===q.answer)x.classList.add('ok')});if(!ok)b.classList.add('no');
+    $('#exp').style.display='block';$('#exp').innerHTML=`<b style="color:${ok?'var(--ok)':'var(--bad)'}">${ok?'CORRECT':'INCORRECT'}</b> · ${q.explain}<div class="nx"><button class="btn" id="qn">${qi+1<Q.length?'다음 문제':'결과 보기'}</button></div>`;
+    $('#qn').onclick=()=>{qi++;qShow()}})}
+qShow();
+observe();
+</script>
+</body>
+</html>

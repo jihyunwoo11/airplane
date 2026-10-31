@@ -1,0 +1,757 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AIRLINER 여객기 백과사전</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<style>
+@property --a{syntax:'<angle>';initial-value:0deg;inherits:false}
+:root{
+  --bg:#04060d;--panel:#0a1020;--line:#ffffff14;--ink:#e9eef8;--sub:#8d99b3;--dim:#5a6680;
+  --c1:#2ee6ff;--c2:#3a7bff;--c3:#9b5cff;--c4:#ffb347;--ok:#3dffa8;--bad:#ff5c7a;
+  --grad:conic-gradient(from var(--a),var(--c1),var(--c2),var(--c3),var(--c4),var(--c1));
+  --hud:'Rajdhani',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--ink);overflow-x:hidden;
+  background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px);background-size:64px 64px;background-attachment:fixed}
+.wrap{max-width:1240px;margin:0 auto;padding:0 20px}
+.hud{font-family:var(--hud);letter-spacing:.12em;text-transform:uppercase}
+#prog{position:fixed;top:0;left:0;height:3px;width:0;z-index:99;background:linear-gradient(90deg,var(--c1),var(--c3),var(--c4));box-shadow:0 0 12px var(--c1)}
+
+/* NAV */
+nav{position:fixed;top:0;left:0;right:0;z-index:60;transition:background .3s}
+nav.solid{background:#04060dd9;backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+nav .wrap{display:flex;align-items:center;gap:4px;height:62px;overflow-x:auto;scrollbar-width:none}
+nav .logo{font-family:var(--hud);font-weight:700;font-size:20px;letter-spacing:.2em;margin-right:18px;white-space:nowrap}
+nav .logo b{color:var(--c1)}
+nav a{font-size:13px;font-weight:700;color:var(--sub);text-decoration:none;padding:8px 12px;border-radius:8px;white-space:nowrap;transition:.2s}
+nav a span{font-family:var(--hud);color:var(--dim);margin-right:5px}
+nav a:hover,nav a.on{color:#fff;background:#ffffff10}
+nav a.on span{color:var(--c1)}
+
+/* GLOW BORDER */
+.glow{position:relative;border-radius:18px;isolation:isolate}
+.glow::before{content:"";position:absolute;inset:-1.5px;border-radius:inherit;background:var(--grad);animation:spin 6s linear infinite;z-index:-1;opacity:.55;transition:opacity .3s}
+.glow::after{content:"";position:absolute;inset:-2px;border-radius:inherit;background:var(--grad);animation:spin 6s linear infinite;z-index:-2;filter:blur(22px);opacity:0;transition:opacity .3s}
+.glow:hover::before,.glow.hot::before{opacity:1}
+.glow:hover::after,.glow.hot::after{opacity:.55}
+.glow>.in{position:relative;height:100%;border-radius:17px;background:linear-gradient(165deg,#0e1730 0%,#070b17 75%);overflow:hidden}
+@keyframes spin{to{--a:360deg}}
+
+/* HERO */
+.hero{position:relative;height:100vh;min-height:640px;overflow:hidden;
+  background:linear-gradient(180deg,#02040b 0%,#061433 30%,#123a73 58%,#3d5d92 72%,#c9805e 90%,#f0b27a 100%)}
+.hero canvas{position:absolute;inset:0;width:100%;height:100%;cursor:grab}
+.hero canvas:active{cursor:grabbing}
+.hero .shade{position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at 30% 80%,#04060dcc,transparent 60%),linear-gradient(0deg,var(--bg) 0%,transparent 22%)}
+.corner{position:absolute;width:44px;height:44px;border:2px solid var(--c1);opacity:.7;pointer-events:none}
+.corner.tl{top:84px;left:24px;border-right:0;border-bottom:0}.corner.tr{top:84px;right:24px;border-left:0;border-bottom:0}
+.corner.bl{bottom:24px;left:24px;border-right:0;border-top:0}.corner.br{bottom:24px;right:24px;border-left:0;border-top:0}
+.hcopy{position:absolute;left:0;right:0;bottom:90px;pointer-events:none}
+.hcopy .wrap>*{pointer-events:auto}
+.tag{display:inline-flex;gap:10px;align-items:center;font-family:var(--hud);font-weight:600;letter-spacing:.25em;font-size:13px;color:var(--c1)}
+.tag::before{content:"";width:28px;height:2px;background:var(--c1)}
+.hero h1{font-size:clamp(42px,7.2vw,96px);font-weight:900;line-height:1.02;letter-spacing:-.03em;margin:16px 0 18px;text-shadow:0 10px 40px #000a}
+.hero h1 em{font-style:normal;background:linear-gradient(90deg,#fff,var(--c1) 40%,var(--c4));-webkit-background-clip:text;background-clip:text;color:transparent}
+.hero p.lead{max-width:540px;color:#c6d0e6;font-size:17px;line-height:1.75}
+.models{display:flex;gap:8px;flex-wrap:wrap;margin-top:24px}
+.mbtn{cursor:pointer;font-family:var(--hud);font-weight:700;letter-spacing:.1em;font-size:14px;color:#cfe3ff;background:#0a1328b3;border:1px solid #ffffff2a;padding:9px 16px;border-radius:10px;backdrop-filter:blur(6px);transition:.2s}
+.mbtn:hover{border-color:var(--c1);color:#fff}
+.mbtn.on{background:linear-gradient(90deg,#2ee6ff33,#9b5cff33);border-color:var(--c1);color:#fff;box-shadow:0 0 20px #2ee6ff55}
+.readout{position:absolute;top:104px;right:44px;display:grid;gap:10px;text-align:right;pointer-events:none}
+.readout div{font-family:var(--hud);font-size:12px;letter-spacing:.2em;color:#9fb6da}
+.readout b{display:block;font-size:30px;letter-spacing:.04em;color:#fff;font-weight:600;text-shadow:0 0 18px #2ee6ff88}
+.readout .nm{font-size:13px;color:var(--c1)}
+.drag{position:absolute;bottom:34px;right:50px;font-family:var(--hud);letter-spacing:.2em;font-size:12px;color:#ffffffaa;pointer-events:none}
+.scrollhint{position:absolute;bottom:30px;left:50%;transform:translateX(-50%);width:24px;height:38px;border:2px solid #ffffff66;border-radius:14px;pointer-events:none}
+.scrollhint::after{content:"";position:absolute;left:50%;top:7px;width:3px;height:8px;margin-left:-1.5px;border-radius:2px;background:#fff;animation:sh 1.6s infinite}
+@keyframes sh{to{transform:translateY(12px);opacity:0}}
+
+/* SECTIONS */
+section{padding:110px 0 40px;position:relative}
+.sh{display:grid;grid-template-columns:auto 1fr;gap:6px 28px;align-items:end;margin-bottom:40px}
+.sh .num{grid-row:span 2;font-family:var(--hud);font-weight:700;font-size:92px;line-height:.8;color:transparent;-webkit-text-stroke:1.5px #2ee6ff88}
+.sh h2{font-size:clamp(28px,4vw,44px);font-weight:900;letter-spacing:-.02em}
+.sh p{color:var(--sub);line-height:1.7;max-width:720px}
+.reveal{opacity:0;transform:perspective(900px) translateY(50px) rotateX(14deg);transition:opacity .9s,transform .9s cubic-bezier(.2,.8,.2,1)}
+.reveal.show{opacity:1;transform:none}
+
+/* TOOLS */
+.tools{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:26px}
+.chip{cursor:pointer;font:inherit;font-size:13px;font-weight:700;color:var(--sub);background:#ffffff08;border:1px solid var(--line);padding:9px 15px;border-radius:10px;transition:.2s}
+.chip:hover{color:#fff;border-color:#ffffff40}
+.chip.on{color:#04060d;background:var(--c1);border-color:var(--c1);box-shadow:0 0 18px #2ee6ff66}
+.inp{font:inherit;font-size:14px;color:#fff;background:#ffffff08;border:1px solid var(--line);padding:10px 14px;border-radius:10px;outline:none}
+.inp:focus{border-color:var(--c1)}
+.inp option{background:#0a1020}
+.tools .sp{flex:1}
+
+/* CARDS */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:22px;perspective:1400px}
+.card{cursor:pointer;transform-style:preserve-3d;transition:transform .15s ease-out}
+.card .in{padding:18px 18px 16px;display:flex;flex-direction:column;transform-style:preserve-3d}
+.card .light{position:absolute;inset:0;pointer-events:none;background:radial-gradient(circle at var(--mx,50%) var(--my,0%),#ffffff1f,transparent 50%);opacity:0;transition:opacity .3s}
+.card:hover .light{opacity:1}
+.ctop{display:flex;justify-content:space-between;align-items:center;transform:translateZ(30px)}
+.code{font-family:var(--hud);font-weight:700;font-size:15px;letter-spacing:.14em;color:var(--c1)}
+.st{font-family:var(--hud);font-weight:700;font-size:11px;letter-spacing:.14em;padding:3px 8px;border-radius:6px;border:1px solid}
+.st.live{color:var(--ok);border-color:#3dffa855}.st.ret{color:var(--bad);border-color:#ff5c7a55}.st.part{color:var(--c4);border-color:#ffb34755}
+.card .pic{height:150px;margin:6px -6px;display:grid;place-items:center;transform:translateZ(60px);
+  background:radial-gradient(ellipse at center,#2ee6ff14,transparent 70%)}
+.card .pic svg{height:140px;width:100%;transform:rotate(-14deg);transition:transform .5s cubic-bezier(.2,.8,.2,1);filter:drop-shadow(0 18px 18px #000c)}
+.card:hover .pic svg{transform:rotate(-22deg) scale(1.08) translateX(8px)}
+.card h3{font-size:21px;font-weight:900;transform:translateZ(40px)}
+.card .nick{font-size:13px;color:var(--sub);margin-top:3px;transform:translateZ(30px)}
+.spec3{display:grid;grid-template-columns:repeat(3,1fr);margin-top:14px;border-top:1px solid var(--line);padding-top:12px;transform:translateZ(25px)}
+.spec3 div{text-align:left}
+.spec3 b{display:block;font-family:var(--hud);font-size:22px;font-weight:600}
+.spec3 span{font-family:var(--hud);font-size:10px;letter-spacing:.14em;color:var(--dim)}
+.empty{grid-column:1/-1;text-align:center;color:var(--sub);padding:40px}
+
+/* MODAL */
+.modal{position:fixed;inset:0;z-index:100;display:none;place-items:center;padding:16px;background:#02040acc;backdrop-filter:blur(10px)}
+.modal.open{display:grid;animation:fi .3s}
+@keyframes fi{from{opacity:0}}
+.mbox{width:min(1100px,100%);max-height:92vh;animation:mp .55s cubic-bezier(.2,1.1,.3,1)}
+@keyframes mp{from{transform:perspective(1200px) rotateX(24deg) translateY(60px) scale(.9);opacity:0}}
+.mbox::before{opacity:1}
+.mbox .in{display:grid;grid-template-columns:1.15fr 1fr;max-height:92vh}
+.view{position:relative;min-height:420px;background:radial-gradient(ellipse at 50% 60%,#13305f,#060a16 70%)}
+.view canvas{position:absolute;inset:0;width:100%;height:100%;cursor:grab}
+.view .vlab{position:absolute;left:20px;top:18px;pointer-events:none}
+.view .vlab .code{font-size:13px}
+.view .vlab h3{font-size:34px;font-weight:900;margin-top:2px}
+.view .vlab .nick{color:var(--c4);font-weight:700;font-size:14px}
+.view .vhint{position:absolute;bottom:14px;left:20px;font-family:var(--hud);letter-spacing:.2em;font-size:11px;color:#ffffff88;pointer-events:none}
+.detail{padding:26px 26px 30px;overflow-y:auto}
+.close{position:absolute;top:14px;right:14px;z-index:3;width:38px;height:38px;border-radius:10px;border:1px solid #ffffff30;background:#0a1020cc;color:#fff;font-size:18px;cursor:pointer}
+.close:hover{border-color:var(--c1)}
+.tbl{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--line);border:1px solid var(--line);border-radius:12px;overflow:hidden;margin-bottom:18px}
+.tbl div{background:#0a1020;padding:10px 12px}
+.tbl span{display:block;font-family:var(--hud);font-size:10px;letter-spacing:.16em;color:var(--dim)}
+.tbl b{font-size:15px;font-weight:700}
+.sum{line-height:1.85;color:#d3dbec;font-size:15px}
+.lbl{font-family:var(--hud);font-weight:700;letter-spacing:.2em;font-size:12px;color:var(--c1);margin:22px 0 10px}
+.bars{display:grid;gap:10px}
+.bar label{display:flex;justify-content:space-between;font-size:13px;margin-bottom:5px;color:var(--sub)}
+.bar label b{color:#fff;font-family:var(--hud);font-size:15px;letter-spacing:.04em}
+.bar .t{height:6px;background:#ffffff10;border-radius:3px;overflow:hidden}
+.bar .f{height:100%;width:0;background:linear-gradient(90deg,var(--c2),var(--c1));box-shadow:0 0 10px var(--c1);transition:width 1.1s cubic-bezier(.2,.9,.3,1)}
+.facts{list-style:none;display:grid;gap:8px;counter-reset:f}
+.facts li{counter-increment:f;display:grid;grid-template-columns:34px 1fr;gap:6px;line-height:1.7;font-size:14px;color:#d3dbec;padding:10px 12px;background:#ffffff06;border:1px solid var(--line);border-radius:10px}
+.facts li::before{content:"0" counter(f);font-family:var(--hud);font-weight:700;color:var(--c4);font-size:16px}
+.note{margin-top:12px;padding:12px 14px;border-radius:10px;font-size:14px;line-height:1.7;border-left:3px solid var(--c3);background:#9b5cff14}
+.note b{color:#fff}
+
+/* COMPARE */
+.cmpbar{display:grid;grid-template-columns:1fr auto 1fr;gap:14px;align-items:center;margin-bottom:18px}
+.cmpbar select{width:100%}
+.cmpbar .vs{font-family:var(--hud);font-weight:700;font-size:26px;letter-spacing:.2em;color:var(--sub)}
+.sa{border-color:var(--c1)!important;color:var(--c1)!important}.sb{border-color:var(--c4)!important;color:var(--c4)!important}
+.bp{padding:16px;background:#071431}
+.bp svg{width:100%;height:auto;display:block;max-height:460px}
+.crows{padding:18px 22px 22px}
+.crow{display:grid;grid-template-columns:1fr 150px 1fr;gap:14px;align-items:center;padding:7px 0}
+.crow .l,.crow .r{height:8px;background:#ffffff0d;border-radius:4px;overflow:hidden;display:flex}
+.crow .l{justify-content:flex-end}
+.crow .l i{background:var(--c1);box-shadow:0 0 10px var(--c1)}.crow .r i{background:var(--c4);box-shadow:0 0 10px var(--c4)}
+.crow i{display:block;height:100%;border-radius:4px;transition:width .9s cubic-bezier(.2,.9,.3,1)}
+.crow .m{text-align:center;font-size:12px;color:var(--sub)}
+.crow .m b{display:flex;justify-content:center;gap:10px;font-family:var(--hud);font-size:16px;color:#fff;letter-spacing:.03em}
+.crow .m .wa{color:var(--c1)}.crow .m .wb{color:var(--c4)}
+
+/* PHYSICS */
+.phys{display:grid;grid-template-columns:1.35fr 1fr;gap:22px}
+.simsky{position:relative;height:360px;overflow:hidden;background:linear-gradient(180deg,#0b2a5c,#2c6bb3 60%,#7fb0dc)}
+.cl{position:absolute;height:40px;border-radius:40px;background:#ffffffb3;filter:blur(6px);animation:cl linear infinite}
+@keyframes cl{from{left:110%}to{left:-40%}}
+.sp1{position:absolute;height:1px;background:linear-gradient(90deg,transparent,#fff);animation:spd linear infinite;opacity:.5}
+@keyframes spd{from{left:110%}to{left:-30%}}
+#simplane{position:absolute;left:50%;width:300px;transform:translate(-50%,-50%);transition:top .5s ease-out,transform .5s ease-out;filter:drop-shadow(0 18px 14px #0006)}
+#simplane svg{width:100%}
+.arw{position:absolute;display:flex;align-items:center;gap:6px;font-family:var(--hud);font-weight:700;letter-spacing:.1em;font-size:12px;text-shadow:0 1px 4px #000;pointer-events:none;transition:all .4s}
+.arw i{display:block;border-radius:3px;transition:all .4s}
+.simctl{padding:18px 20px 20px;display:grid;gap:14px}
+.rng label{display:flex;justify-content:space-between;font-size:13px;font-weight:700;color:var(--sub);margin-bottom:6px}
+.rng label b{font-family:var(--hud);color:#fff;font-size:16px}
+input[type=range]{width:100%;accent-color:var(--c1)}
+.msg{font-weight:700;font-size:15px;padding:12px 14px;border-radius:10px;background:#ffffff08;border:1px solid var(--line)}
+.pfdwrap{padding:18px;display:flex;flex-direction:column;gap:14px}
+.pfd{width:100%;max-width:330px;margin:0 auto;display:block}
+.rd{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.rd div{background:#000;border:1px solid #ffffff1f;border-radius:8px;padding:8px 12px}
+.rd span{font-family:var(--hud);font-size:10px;letter-spacing:.18em;color:var(--dim);display:block}
+.rd b{font-family:var(--hud);font-size:24px;font-weight:600;color:var(--ok)}
+.rd b.warn{color:var(--bad)}
+.forces{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-top:22px}
+.fc .in{padding:16px 16px 18px}
+.fc h3{display:flex;align-items:baseline;gap:8px;font-size:19px;font-weight:900}
+.fc h3 small{font-family:var(--hud);letter-spacing:.14em;font-size:12px;font-weight:600}
+.fc .bar2{height:3px;border-radius:2px;margin:10px 0 12px}
+.fc p{font-size:13.5px;line-height:1.75;color:#c5cee2}
+.fc p.ex{color:var(--sub);margin-top:8px;font-size:13px}
+
+/* ANATOMY */
+.anat .in{display:grid;grid-template-columns:1.6fr 1fr}
+.bpv{background:#071431;background-image:linear-gradient(#2ee6ff12 1px,transparent 1px),linear-gradient(90deg,#2ee6ff12 1px,transparent 1px);background-size:24px 24px;padding:20px;display:grid;place-items:center}
+.bpv svg{width:100%;height:auto}
+.hs{cursor:pointer}
+.hs circle.o{fill:none;stroke:var(--c4);stroke-width:.25}
+.hs circle.c{fill:var(--c4)}
+.hs circle.o{animation:ping 1.8s infinite;transform-box:fill-box;transform-origin:center}
+@keyframes ping{0%{transform:scale(.6);opacity:1}100%{transform:scale(2.2);opacity:0}}
+.hs text{font-family:var(--hud);font-weight:700;letter-spacing:.06em;fill:#cfe3ff}
+.hs.on circle.c{fill:var(--c1)}.hs.on text{fill:var(--c1)}
+.pside{padding:24px;border-left:1px solid var(--line);display:flex;flex-direction:column}
+.pside .k{font-family:var(--hud);letter-spacing:.2em;font-size:12px;color:var(--c4)}
+.pside h3{font-size:30px;font-weight:900;margin:4px 0 12px}
+.pside p{line-height:1.85;color:#d3dbec;font-size:15px}
+.plist{display:flex;flex-wrap:wrap;gap:6px;margin-top:auto;padding-top:20px}
+
+/* PROFILE */
+.prof .in{padding:22px}
+.prof svg{width:100%;height:auto;display:block}
+.steps{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;margin-top:14px}
+.step{cursor:pointer;text-align:left;font:inherit;color:var(--sub);background:#ffffff06;border:1px solid var(--line);border-radius:10px;padding:10px 12px;transition:.2s}
+.step b{display:block;font-family:var(--hud);font-size:16px;letter-spacing:.1em;color:#fff}
+.step small{font-size:12px}
+.step.on{border-color:var(--c1);background:#2ee6ff14;box-shadow:inset 0 -3px 0 var(--c1)}
+.pinfo{display:grid;grid-template-columns:auto 1fr;gap:24px;align-items:center;margin-top:18px;padding:18px;border-radius:12px;background:#ffffff06;border:1px solid var(--line)}
+.pinfo .nums{display:flex;gap:20px}
+.pinfo .nums div span{display:block;font-family:var(--hud);font-size:10px;letter-spacing:.18em;color:var(--dim)}
+.pinfo .nums b{font-family:var(--hud);font-size:30px;font-weight:600;color:var(--c1)}
+.pinfo h3{font-size:22px;font-weight:900;margin-bottom:6px}
+.pinfo p{color:#c5cee2;line-height:1.8;font-size:14.5px}
+
+/* TIMELINE */
+.tl{position:relative;display:grid;gap:16px;padding-left:34px}
+.tl::before{content:"";position:absolute;left:9px;top:6px;bottom:6px;width:2px;background:linear-gradient(var(--c1),var(--c3),var(--c4))}
+.ti{position:relative}
+.ti::before{content:"";position:absolute;left:-31px;top:24px;width:12px;height:12px;border-radius:50%;background:var(--bg);border:2px solid var(--c1);box-shadow:0 0 12px var(--c1)}
+.ti .in{display:grid;grid-template-columns:120px 1fr;gap:18px;padding:18px 22px;align-items:center}
+.ti .yr{font-family:var(--hud);font-weight:700;font-size:38px;color:var(--c1);letter-spacing:.02em}
+.ti h3{font-size:18px;font-weight:900}
+.ti p{color:var(--sub);font-size:14px;line-height:1.7;margin-top:3px}
+
+/* QUIZ */
+.quiz{max-width:860px;margin:0 auto}
+.quiz .in{padding:30px}
+.qh{display:flex;justify-content:space-between;font-family:var(--hud);letter-spacing:.18em;font-size:13px;color:var(--sub)}
+.qh b{color:var(--c1)}
+.qbar{height:3px;background:#ffffff10;margin:12px 0 24px}
+.qbar i{display:block;height:100%;background:linear-gradient(90deg,var(--c1),var(--c4));transition:width .4s}
+.qq{font-size:21px;font-weight:900;line-height:1.55;margin-bottom:20px}
+.opts{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.opt{cursor:pointer;text-align:left;font:inherit;font-size:15px;font-weight:500;color:#e2e8f5;background:#ffffff06;border:1px solid var(--line);border-radius:12px;padding:14px 16px;display:flex;gap:12px;align-items:flex-start;transition:.2s}
+.opt span{font-family:var(--hud);font-weight:700;color:var(--dim)}
+.opt:hover:not(:disabled){border-color:var(--c1);background:#2ee6ff0d}
+.opt.ok{border-color:var(--ok);background:#3dffa814}.opt.ok span{color:var(--ok)}
+.opt.no{border-color:var(--bad);background:#ff5c7a14;animation:sk .35s}
+@keyframes sk{30%{transform:translateX(-5px)}70%{transform:translateX(5px)}}
+.exp{display:none;margin-top:16px;padding:14px 16px;border-radius:12px;background:#ffffff08;border-left:3px solid var(--c4);line-height:1.75;font-size:14.5px}
+.nx{margin-top:12px;text-align:right}
+.btn{cursor:pointer;font:inherit;font-weight:900;font-size:15px;color:#04060d;background:linear-gradient(90deg,var(--c1),#8ff3ff);border:0;border-radius:10px;padding:12px 22px;box-shadow:0 0 22px #2ee6ff55;transition:transform .2s}
+.btn:hover{transform:translateY(-2px)}
+.res{text-align:center;padding:10px 0}
+.epa{width:220px;height:74px;margin:10px auto 18px;border-radius:10px 40px 40px 10px;background:linear-gradient(#141a2a,#05070d);border:1px solid #ffffff22;display:flex;gap:8px;align-items:center;justify-content:center;transform:perspective(500px) rotateX(18deg);box-shadow:0 20px 40px #000}
+.epa i{width:16px;height:52px;border-radius:2px;background:linear-gradient(90deg,#b98a2e,#ffe08a,#b98a2e);box-shadow:0 0 12px #ffcf5a88}
+.res .sc{font-family:var(--hud);font-weight:700;font-size:72px;line-height:1;background:linear-gradient(90deg,var(--c1),var(--c4));-webkit-background-clip:text;background-clip:text;color:transparent}
+.res h3{font-size:26px;font-weight:900;margin:8px 0}
+.res p{color:var(--sub);margin-bottom:20px}
+
+footer{padding:60px 20px 70px;text-align:center;color:var(--dim);font-size:13px;line-height:1.8}
+
+@media (max-width:980px){
+  .phys,.anat .in,.mbox .in{grid-template-columns:1fr}
+  .forces{grid-template-columns:1fr 1fr}
+  .pside{border-left:0;border-top:1px solid var(--line)}
+  .view{min-height:300px}
+  .steps{grid-template-columns:repeat(4,1fr)}
+}
+@media (max-width:640px){
+  .readout{display:none}.corner{display:none}
+  .hcopy{bottom:60px}
+  .sh{grid-template-columns:1fr}.sh .num{font-size:56px;grid-row:auto}
+  .forces,.opts{grid-template-columns:1fr}
+  .cmpbar{grid-template-columns:1fr}.cmpbar .vs{text-align:center}
+  .crow{grid-template-columns:1fr 110px 1fr}
+  .steps{grid-template-columns:repeat(3,1fr)}
+  .pinfo{grid-template-columns:1fr}
+  .ti .in{grid-template-columns:1fr;gap:4px}
+  .tbl{grid-template-columns:1fr 1fr}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div id="prog"></div>
+<nav id="nav"><div class="wrap">
+  <span class="logo">AIR<b>LINER</b></span>
+  <a href="#fleet"><span>01</span>도감</a><a href="#scale"><span>02</span>크기 비교</a><a href="#physics"><span>03</span>비행 원리</a><a href="#anatomy"><span>04</span>구조</a><a href="#profile"><span>05</span>비행 단계</a><a href="#timeline"><span>06</span>역사</a><a href="#test"><span>07</span>테스트</a>
+</div></nav>
+
+<header class="hero" id="hero">
+  <canvas id="heroCv"></canvas>
+  <div class="shade"></div>
+  <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+  <div class="readout">
+    <div class="nm" id="roName">—</div>
+    <div>GND SPEED<b id="roSpd">0</b></div>
+    <div>ALTITUDE FT<b id="roAlt">0</b></div>
+    <div>HEADING<b id="roHdg">000°</b></div>
+    <div>OAT<b>-54°C</b></div>
+  </div>
+  <div class="hcopy"><div class="wrap">
+    <span class="tag">AIRLINER ENCYCLOPEDIA · 중학생 항공 탐구</span>
+    <h1>수백 톤의 금속이<br><em>하늘에 떠 있는 이유</em></h1>
+    <p class="lead">세계의 대표 여객기 14기의 실제 제원과 설계 이야기, 그리고 양력·추력·항력을 직접 조종하며 배우는 비행의 물리학. 3D 모델을 드래그해서 돌려 보세요.</p>
+    <div class="models" id="models"></div>
+  </div></div>
+  <div class="drag hud">◂ DRAG TO ROTATE ▸</div>
+  <div class="scrollhint"></div>
+</header>
+
+<section id="fleet"><div class="wrap">
+  <div class="sh reveal"><div class="num">01</div><h2>여객기 도감</h2><p>대표 여객기의 제원을 카드로 정리했어요. 카드를 누르면 3D 모델과 상세 제원, 설계 이야기를 볼 수 있어요.</p></div>
+  <div class="tools reveal"><div id="chips" style="display:flex;gap:8px;flex-wrap:wrap"></div><div class="sp"></div>
+    <input class="inp" id="q" placeholder="모델명·제조사 검색" style="min-width:200px">
+    <select class="inp" id="sort"><option value="firstFlight">첫 비행 순</option><option value="seats">좌석 수</option><option value="speed">순항 속도</option><option value="range">항속 거리</option><option value="mtow">최대이륙중량</option><option value="length">기체 길이</option></select></div>
+  <div class="grid" id="grid"></div>
+</div></section>
+
+<section id="scale"><div class="wrap">
+  <div class="sh reveal"><div class="num">02</div><h2>실제 비율 크기 비교</h2><p>두 기체를 같은 축척의 설계도 위에 겹쳐 봐요. 격자 한 칸은 5m이고, 회색 사각형은 길이 12m짜리 시내버스예요.</p></div>
+  <div class="glow reveal"><div class="in">
+    <div class="crows" style="padding-bottom:0"><div class="cmpbar"><select class="inp sa" id="ca"></select><div class="vs">VS</div><select class="inp sb" id="cb"></select></div></div>
+    <div class="bp" id="bp"></div>
+    <div class="crows" id="crows"></div>
+  </div></div>
+</div></section>
+
+<section id="physics"><div class="wrap">
+  <div class="sh reveal"><div class="num">03</div><h2>비행의 물리학 · 조종 시뮬레이터</h2><p>추력(엔진 출력)과 받음각(날개가 공기를 맞는 각도)을 바꿔 보세요. 양력이 무게보다 크면 상승하고, 받음각이 너무 크면 공기 흐름이 날개에서 떨어져 나가 <b>실속(stall)</b>이 일어나요.</p></div>
+  <div class="phys reveal">
+    <div class="glow"><div class="in">
+      <div class="simsky" id="simsky"><div id="simplane"></div><div id="arws"></div></div>
+      <div class="simctl">
+        <div class="rng"><label>추력 THRUST <b id="tv">55%</b></label><input type="range" id="thr" min="0" max="100" value="55"></div>
+        <div class="rng"><label>받음각 ANGLE OF ATTACK <b id="av">5°</b></label><input type="range" id="aoa" min="0" max="18" value="5"></div>
+        <div class="msg" id="msg"></div>
+      </div>
+    </div></div>
+    <div class="glow"><div class="in pfdwrap">
+      <div class="hud" style="font-size:12px;color:var(--sub)">PRIMARY FLIGHT DISPLAY</div>
+      <svg class="pfd" viewBox="0 0 300 300" id="pfd">
+        <defs><clipPath id="pc"><circle cx="150" cy="150" r="118"/></clipPath></defs>
+        <g clip-path="url(#pc)"><g id="hor">
+          <rect x="-300" y="-600" width="900" height="750" fill="#1f6fd1"/><rect x="-300" y="150" width="900" height="750" fill="#7b4a1f"/>
+          <line x1="-300" y1="150" x2="600" y2="150" stroke="#fff" stroke-width="2"/>
+          <g stroke="#fff" stroke-width="1.6" font-family="Rajdhani" font-size="11" fill="#fff">
+            <line x1="125" y1="110" x2="175" y2="110"/><text x="180" y="114">10</text><line x1="135" y1="130" x2="165" y2="130"/>
+            <line x1="115" y1="70" x2="185" y2="70"/><text x="190" y="74">20</text><line x1="135" y1="90" x2="165" y2="90"/>
+            <line x1="125" y1="190" x2="175" y2="190"/><text x="180" y="194">10</text><line x1="135" y1="170" x2="165" y2="170"/>
+            <line x1="115" y1="230" x2="185" y2="230"/><text x="190" y="234">20</text>
+          </g></g></g>
+        <circle cx="150" cy="150" r="118" fill="none" stroke="#ffffff55" stroke-width="2"/>
+        <g stroke="#fff" stroke-width="2"><line x1="150" y1="24" x2="150" y2="36"/><line x1="87" y1="41" x2="93" y2="51"/><line x1="213" y1="41" x2="207" y2="51"/><line x1="41" y1="87" x2="51" y2="93"/><line x1="259" y1="87" x2="249" y2="93"/></g>
+        <path d="M90 150 H130 L138 160 M210 150 H170 L162 160" stroke="#ffd23f" stroke-width="5" fill="none" stroke-linecap="round"/>
+        <rect x="146" y="146" width="8" height="8" fill="#ffd23f"/>
+      </svg>
+      <div class="rd"><div><span>SPEED KM/H</span><b id="rSpd">0</b></div><div><span>ALTITUDE FT</span><b id="rAlt">0</b></div><div><span>V/S FT/MIN</span><b id="rVs">0</b></div><div><span>LIFT / WEIGHT</span><b id="rLw">0</b></div></div>
+    </div></div>
+  </div>
+  <div class="forces" id="forces"></div>
+</div></section>
+
+<section id="anatomy"><div class="wrap">
+  <div class="sh reveal"><div class="num">04</div><h2>기체 구조 해부도</h2><p>설계도 위의 노란 표시를 눌러 각 부분의 이름과 역할, 그리고 그 부분이 움직이는 조종면을 알아보세요.</p></div>
+  <div class="glow anat reveal"><div class="in">
+    <div class="bpv"><svg id="anaSvg"></svg></div>
+    <div class="pside" id="pside"><span class="k">SELECT A COMPONENT</span><h3>구조를 선택하세요</h3><p>여객기는 수백만 개의 부품으로 이루어져 있지만, 크게 동체·날개·꼬리날개·엔진·착륙장치로 나눌 수 있어요.</p><div class="plist" id="plist"></div></div>
+  </div></div>
+</div></section>
+
+<section id="profile"><div class="wrap">
+  <div class="sh reveal"><div class="num">05</div><h2>비행 프로파일</h2><p>공항에 도착해서 목적지에 내릴 때까지, 여객기의 고도와 속도가 어떻게 바뀌는지 따라가 봐요.</p></div>
+  <div class="glow prof reveal"><div class="in">
+    <svg viewBox="0 0 1000 280" id="profSvg"></svg>
+    <div class="steps" id="steps"></div>
+    <div class="pinfo"><div class="nums"><div><span>ALTITUDE FT</span><b id="pAlt">0</b></div><div><span>SPEED KM/H</span><b id="pSpd">0</b></div></div><div><h3 id="pT"></h3><p id="pD"></p></div></div>
+  </div></div>
+</div></section>
+
+<section id="timeline"><div class="wrap">
+  <div class="sh reveal"><div class="num">06</div><h2>항공 역사 타임라인</h2><p>12초 동안 37m를 날았던 첫 동력 비행에서, 500명을 태우고 지구 반대편까지 날아가는 오늘날까지의 이야기예요.</p></div>
+  <div class="tl" id="tl"></div>
+</div></section>
+
+<section id="test"><div class="wrap">
+  <div class="sh reveal"><div class="num">07</div><h2>조종사 자격 테스트</h2><p>문제를 모두 풀면 점수에 따라 기장 견장(줄 4개)부터 훈련생 견장까지 받을 수 있어요.</p></div>
+  <div class="glow quiz reveal"><div class="in" id="qbox"></div></div>
+</div></section>
+
+<footer>AIRLINER ENCYCLOPEDIA · 제원은 대표 모델 기준의 대략적인 값이며, 같은 기종이라도 형식과 항공사 설정에 따라 달라요.<br>3D 모델과 설계도는 실제 길이·날개폭 비율을 반영한 단순화 모델이에요.</footer>
+
+<div class="modal" id="modal"><div class="glow mbox hot"><div class="in">
+  <button class="close" id="mclose" aria-label="닫기">✕</button>
+  <div class="view" id="mview"><canvas id="mCv"></canvas><div class="vlab" id="vlab"></div><div class="vhint">DRAG TO ROTATE</div></div>
+  <div class="detail" id="mdet"></div>
+</div></div></div>
+
+<!--DATA-->
+<script>
+const PLANES=[...(window.PLANES_A||[]),...(window.PLANES_B||[])];
+const L=window.LEARN||{forces:[],parts:[],journey:[],quiz:[],history:[]};
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+const fmt=n=>n==null||n===''?'—':Number(n).toLocaleString('ko-KR');
+const byId=id=>PLANES.find(p=>p.id===id);
+
+/* ---------- geometry spec (meters, nose = +x) ---------- */
+function spec(p){
+  const Lf=p.length,W=p.wingspan,c=p.category||'',id=p.id;
+  const sup=c==='초음속기',prop=c==='프로펠러기',wide=c.indexOf('쌍통로')===0,reg=c==='지역 제트기';
+  const R=id==='a380'?3.55:wide?2.85:reg?1.5:prop?1.35:sup?1.45:1.95;
+  const s={L:Lf,W,R,sup,prop,wide,id,high:id==='atr72',ttail:id==='atr72',eng:p.engines||2};
+  s.nL=sup?0.16*Lf:2.3*R; s.tL=(sup?0.12:prop?0.3:0.24)*Lf;
+  s.sweep=sup?0:prop?(id==='dc3'?0.15:0.03):id==='b707'?0.68:0.58;
+  s.leX=(prop?0.62:0.6)*Lf; s.cr=(prop?0.16:0.2)*Lf; s.ct=s.cr*(prop?0.45:0.27);
+  if(sup) s.wing=[[0.74*Lf,R],[0.45*Lf,0.3*W],[0.17*Lf,0.5*W],[0.03*Lf,0.5*W],[0.03*Lf,R]];
+  else{const tz=W/2,tle=s.leX-(tz-R)*s.sweep;s.wing=[[s.leX,R],[tle,tz],[tle-s.ct,tz],[s.leX-s.cr,R]]}
+  s.fh=sup?0.11*Lf:Math.max(2.6*R,0.16*Lf);
+  const fx0=0.02*Lf,fTopTE=fx0-s.fh*0.25,fTopLE=fTopTE+0.085*Lf;
+  s.fin=[[0.23*Lf,0],[fx0,0],[fTopTE,s.fh],[fTopLE,s.fh]];
+  if(!sup){const hs=s.ttail?0.13*W:Math.min(0.17*W,0.2*Lf),hLE=0.2*Lf,hcr=0.11*Lf,hsw=prop?0.15:0.65;
+    let sh=s.ttail?(fTopLE+0.02*Lf)-hLE:0;
+    s.hstab=[[hLE+sh,0],[hLE-hs*hsw+sh,hs],[hLE-hs*hsw-hcr*0.45+sh,hs],[hLE-hcr+sh,0]];}
+  s.eR=sup?0.6:prop?R*0.42:R*0.47; s.nl=prop?s.eR*5.5:s.eR*3.6;
+  s.engZ=sup?[R+1.3,R+2.7]:(s.eng>=4?[0.37*W/2,0.66*W/2]:[(prop?0.34:0.33)*W/2]);
+  return s;
+}
+const rAt=(s,x)=>{if(x>=s.L)return 0;if(x>s.L-s.nL){const u=(s.L-x)/s.nL;return s.R*(s.sup?Math.pow(u,.85):Math.sqrt(u*(2-u)))}
+  if(x<s.tL){const u=x/s.tL;return s.R*(0.15+0.85*Math.pow(u,0.6))}return s.R};
+const upAt=(s,x)=>x<s.tL?Math.pow(1-x/s.tL,1.5)*s.R*(s.sup?0.2:0.55):0;
+const xle=(s,z)=>s.leX-(z-s.R)*s.sweep;
+function engX(s,z){if(s.sup)return 0.13*s.L;const f=xle(s,z)+s.nl*(s.prop?0.45:0.55);return f-s.nl/2}
+
+/* ---------- top view SVG ---------- */
+function topGroup(p,o={}){
+  const s=spec(p),f=o.fill||'url(#tg)',st=o.stroke||'none',sw=o.sw||0,acc=p.color||'#2ee6ff';
+  const pts=[];for(let i=0;i<=60;i++){const x=i/60*s.L;pts.push([x,-rAt(s,x)])}
+  for(let i=60;i>=0;i--){const x=i/60*s.L;pts.push([x,rAt(s,x)])}
+  const poly=(a,m=1)=>a.map(([x,y])=>`${x.toFixed(2)},${(y*m).toFixed(2)}`).join(' ');
+  let g='';
+  const attr=`fill="${f}" stroke="${st}" stroke-width="${sw}" stroke-linejoin="round"`;
+  g+=`<polygon points="${poly(s.wing)}" ${attr}/><polygon points="${poly(s.wing,-1)}" ${attr}/>`;
+  if(s.hstab)g+=`<polygon points="${poly(s.hstab)}" ${attr}/><polygon points="${poly(s.hstab,-1)}" ${attr}/>`;
+  for(const z of s.engZ)for(const m of[1,-1]){
+    if(s.sup)g+=`<rect x="${0.03*s.L}" y="${m*z-0.7}" width="${0.2*s.L}" height="1.4" rx=".4" fill="${o.eng||'#8e9bb5'}" stroke="${st}" stroke-width="${sw}"/>`;
+    else{const cx=engX(s,z);g+=`<rect x="${cx-s.nl/2}" y="${m*z-s.eR}" width="${s.nl}" height="${s.eR*2}" rx="${s.eR*.6}" fill="${o.eng||'#8e9bb5'}" stroke="${st}" stroke-width="${sw}"/><rect x="${cx+s.nl/2-s.nl*.12}" y="${m*z-s.eR}" width="${s.nl*.12}" height="${s.eR*2}" rx="${s.eR*.3}" fill="${acc}"/>`}}
+  g+=`<polygon points="${poly(pts)}" ${attr}/>`;
+  g+=`<rect x="${0.02*s.L}" y="-0.2" width="${0.21*s.L}" height=".4" fill="${acc}"/>`;
+  g+=`<path d="M${s.L-s.nL*.55},${-s.R*.35} Q${s.L-s.nL*.25},0 ${s.L-s.nL*.55},${s.R*.35}" stroke="#0b1430" stroke-width="${s.R*.18}" fill="none"/>`;
+  return {g,s};
+}
+function topSVG(p){
+  const {g,s}=topGroup(p),pad=2;
+  return `<svg viewBox="${-pad} ${-s.W/2-pad} ${s.L+pad*2} ${s.W+pad*2}" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="tg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset=".5" stop-color="#dfe6f3"/><stop offset="1" stop-color="#9aa8c4"/></linearGradient></defs>${g}</svg>`;
+}
+
+/* ---------- side view SVG ---------- */
+function sideGroup(p,o={}){
+  const s=spec(p),acc=p.color||'#2ee6ff',bp=o.blue;
+  const F=bp?'#2ee6ff12':'url(#sg)',S=bp?'#2ee6ff':'none',SW=bp?.12:0;
+  const top=[],bot=[];for(let i=0;i<=70;i++){const x=i/70*s.L,r=rAt(s,x),u=upAt(s,x);top.push([x,-u-r]);bot.push([x,-u+r])}
+  const P=a=>a.map(([x,y])=>`${x.toFixed(2)},${y.toFixed(2)}`).join(' ');
+  let g='';
+  const fb=-s.R*0.55;
+  g+=`<polygon points="${P(s.fin.map(([x,y])=>[x,fb-y]))}" fill="${bp?F:acc}" stroke="${S}" stroke-width="${SW}"/>`;
+  if(s.hstab){const hx=s.hstab[0][0],hy=s.ttail?fb-s.fh:-upAt(s,0.12*s.L)*.6;
+    g+=`<ellipse cx="${hx-0.07*s.L}" cy="${hy}" rx="${0.08*s.L}" ry="${Math.max(.18,s.R*.1)}" fill="${bp?F:'#c7d0e2'}" stroke="${S}" stroke-width="${SW}"/>`}
+  const wy=s.high?-s.R*.85:s.R*.55;
+  g+=`<polygon points="${s.leX},${wy} ${s.leX-s.cr},${wy+.15} ${s.leX-s.cr*.85},${wy+s.R*.22} ${s.leX-s.cr*.1},${wy+s.R*.2}" fill="${bp?F:'#c7d0e2'}" stroke="${S}" stroke-width="${SW}"/>`;
+  if(o.gear){const gx=[s.L-s.nL-1.2,s.leX-s.cr*.75];for(const x of gx){g+=`<line x1="${x}" y1="${s.R*.7}" x2="${x}" y2="${s.R+1.6}" stroke="${bp?S:'#556'}" stroke-width=".3"/><circle cx="${x}" cy="${s.R+1.9}" r=".75" fill="${bp?'#071431':'#223'}" stroke="${S}" stroke-width="${SW}"/>`}}
+  g+=`<polygon points="${P(top)} ${P(bot.slice().reverse())}" fill="${F}" stroke="${S}" stroke-width="${SW}"/>`;
+  if(!bp){g+=`<polygon points="${P(top.filter(([x])=>x>s.tL*.6&&x<s.L-s.nL*.4).map(([x,y])=>[x,y]))} ${P(top.filter(([x])=>x>s.tL*.6&&x<s.L-s.nL*.4).reverse().map(([x,y])=>[x,y+s.R*.05]))}" fill="${acc}" opacity=".0"/>`;
+    g+=`<rect x="${s.tL*.7}" y="${-s.R*.02}" width="${s.L-s.nL*.5-s.tL*.7}" height="${s.R*.09}" fill="${acc}"/>`;
+    for(let x=s.tL+.6;x<s.L-s.nL-.4;x+=Math.max(.9,s.L/70))g+=`<rect x="${x}" y="${-s.R*.38}" width="${Math.max(.3,s.L/220)}" height="${s.R*.17}" rx=".12" fill="#0b1430"/>`;}
+  g+=`<path d="M${s.L-s.nL*.78},${-s.R*.52} L${s.L-s.nL*.42},${-s.R*.42} L${s.L-s.nL*.4},${-s.R*.24} L${s.L-s.nL*.8},${-s.R*.3}Z" fill="${bp?'none':'#0b1430'}" stroke="${S}" stroke-width="${SW}"/>`;
+  for(const z of s.engZ.slice(0,1)){
+    if(s.sup){g+=`<rect x="${0.03*s.L}" y="${s.R*.55}" width="${0.2*s.L}" height="${s.R*.6}" fill="${bp?F:'#9aa6bf'}" stroke="${S}" stroke-width="${SW}"/>`;continue}
+    const cx=engX(s,z),ey=s.high?-s.R*.85-s.eR*.2:wy+s.eR*.9;
+    g+=`<rect x="${cx-s.nl/2}" y="${ey-s.eR}" width="${s.nl}" height="${s.eR*2}" rx="${s.eR*.7}" fill="${bp?F:'#9aa6bf'}" stroke="${S}" stroke-width="${SW}"/>`;
+    if(!bp)g+=`<rect x="${cx+s.nl/2-s.nl*.14}" y="${ey-s.eR}" width="${s.nl*.14}" height="${s.eR*2}" rx="${s.eR*.4}" fill="${acc}"/>`;
+    if(s.prop)g+=`<ellipse cx="${cx+s.nl/2+.2}" cy="${ey}" rx=".25" ry="${s.W*.07}" fill="#ffffff55"><animate attributeName="ry" values="${s.W*.07};${s.W*.01};${s.W*.07}" dur=".12s" repeatCount="indefinite"/></ellipse>`;
+  }
+  const minY=-s.R*.55-s.fh-1,maxY=s.R+(o.gear?3:1.6);
+  return {g,s,minY,maxY,wy};
+}
+function sideSVG(p,o={}){const {g,s,minY,maxY}=sideGroup(p,o);return `<svg viewBox="-1 ${minY} ${s.L+2} ${maxY-minY}" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="sg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset=".6" stop-color="#e3e9f4"/><stop offset="1" stop-color="#a7b3cc"/></linearGradient></defs>${g}</svg>`}
+
+/* ---------- 3D ---------- */
+const HAS3D=!!window.THREE;
+function build3D(p){
+  const s=spec(p),T=THREE,g=new T.Group(),inner=new T.Group();g.add(inner);
+  const M=(c,m,r)=>new T.MeshStandardMaterial({color:c,metalness:m,roughness:r});
+  const white=M(0xf3f6fb,.25,.32),acc=M(new T.Color(p.color||'#2ee6ff'),.35,.35),grey=M(0xaab2c2,.7,.28),dark=M(0x0a0f1d,.3,.15),belly=M(0xc9d0dc,.3,.4);
+  // fuselage
+  const pts=[new T.Vector2(0,0)];for(let i=0;i<=90;i++){const x=i/90*s.L;pts.push(new T.Vector2(Math.max(rAt(s,x),0.0001),x))}pts.push(new T.Vector2(0,s.L));
+  const fg=new T.LatheGeometry(pts,56);fg.rotateZ(-Math.PI/2);
+  const pa=fg.attributes.position;for(let i=0;i<pa.count;i++){const x=pa.getX(i);pa.setY(i,pa.getY(i)+upAt(s,x))}
+  fg.computeVertexNormals();inner.add(new T.Mesh(fg,white));
+  // slabs
+  const slab=(pts2,th,mat,mirror)=>{const sh=new T.Shape(pts2.map(([a,b])=>new T.Vector2(a,mirror?-b:b)));
+    const ge=new T.ExtrudeGeometry(sh,{depth:th,bevelEnabled:true,bevelThickness:th*.35,bevelSize:th*.35,bevelSegments:2,steps:1});ge.rotateX(Math.PI/2);ge.translate(0,th/2,0);return new T.Mesh(ge,mat)};
+  const wy=s.high?s.R*.85:-s.R*.5,th=Math.max(.18,s.R*.11),dih=s.high?.015:.06;
+  for(const m of[1,-1]){const w=slab(s.wing,th,white,m<0);w.position.y=wy;w.rotation.x=-m*dih;inner.add(w);
+    if(!s.sup&&!s.prop&&p.firstFlight>1985&&s.id!=='b787'&&s.id!=='b777'){const tip=s.wing[1],wl=new T.Mesh(new T.BoxGeometry(s.ct*.8,s.R*.9,.1),acc);wl.position.set(tip[0]-s.ct*.45,wy+s.R*.45+(tip[1])*Math.sin(dih),m*tip[1]);wl.rotation.z=.35;inner.add(wl)}}
+  // fin
+  {const sh=new T.Shape(s.fin.map(([a,b])=>new T.Vector2(a,b)));const ge=new T.ExtrudeGeometry(sh,{depth:.26,bevelEnabled:true,bevelThickness:.08,bevelSize:.08,bevelSegments:1});ge.translate(0,0,-.13);
+   const fm=new T.Mesh(ge,acc);fm.position.y=s.R*.55+upAt(s,0.1*s.L)*.85;inner.add(fm);
+   if(s.hstab)for(const m of[1,-1]){const h=slab(s.hstab,.16,white,m<0);h.position.y=s.ttail?fm.position.y+s.fh:upAt(s,0.12*s.L)*.7;h.rotation.x=-m*.05;inner.add(h)}}
+  // engines
+  g.userData.props=[];
+  for(const z of s.engZ)for(const m of[1,-1]){
+    if(s.sup){const b=new T.Mesh(new T.BoxGeometry(.2*s.L,1.1,1.2),grey);b.position.set(.13*s.L,wy-.75,m*z);inner.add(b);continue}
+    const cx=engX(s,z),zz=m*z,ey=s.high?wy-s.eR*.1:wy-s.eR*1.05+(z*Math.sin(dih));
+    const nac=new T.Mesh(new T.CylinderGeometry(s.eR*(s.prop?.75:1),s.eR*.78,s.nl,36),s.prop?white:grey);nac.rotation.z=Math.PI/2;nac.position.set(cx,ey,zz);inner.add(nac);
+    if(!s.prop){const lip=new T.Mesh(new T.TorusGeometry(s.eR*.93,s.eR*.09,12,36),acc);lip.rotation.y=Math.PI/2;lip.position.set(cx+s.nl/2,ey,zz);inner.add(lip);
+      const fan=new T.Mesh(new T.CircleGeometry(s.eR*.9,36),dark);fan.rotation.y=Math.PI/2;fan.position.set(cx+s.nl/2-.05,ey,zz);inner.add(fan);
+      const cone=new T.Mesh(new T.ConeGeometry(s.eR*.25,s.eR*.5,20),grey);cone.rotation.z=-Math.PI/2;cone.position.set(cx+s.nl/2+.05,ey,zz);inner.add(cone);
+      const py=new T.Mesh(new T.BoxGeometry(s.nl*.6,Math.abs(wy-ey),.18),white);py.position.set(cx-s.nl*.1,(wy+ey)/2,zz);inner.add(py)}
+    else{const sp=new T.Mesh(new T.ConeGeometry(s.eR*.45,s.eR*1.1,20),acc);sp.rotation.z=-Math.PI/2;sp.position.set(cx+s.nl/2+s.eR*.5,ey,zz);inner.add(sp);
+      const pr=new T.Group();pr.position.set(cx+s.nl/2+s.eR*.3,ey,zz);const nb=s.id==='atr72'?6:3,len=s.W*.075;
+      for(let i=0;i<nb;i++){const b=new T.Mesh(new T.BoxGeometry(.06,len,.32),dark);b.position.y=len/2;const h=new T.Group();h.rotation.x=i/nb*Math.PI*2;h.add(b);pr.add(h)}
+      inner.add(pr);g.userData.props.push(pr)}}
+  // windows
+  const wins=[];const step=Math.max(.95,s.L/75);
+  for(let x=s.tL+.8;x<s.L-s.nL-.5;x+=step){wins.push([x,s.R*.28,.968]);if(s.id==='a380')wins.push([x,s.R*.66,.75])}
+  if(s.id==='b747')for(let x=s.L-s.nL-s.L*.28;x<s.L-s.nL;x+=step)wins.push([x,s.R*.66,.75]);
+  const im=new T.InstancedMesh(new T.BoxGeometry(Math.min(.32,step*.4),s.R*.15,.12),dark,wins.length*2);
+  const mx=new T.Matrix4();let k=0;for(const [x,y,zf] of wins)for(const m of[1,-1]){mx.makeTranslation(x,y,m*s.R*zf);im.setMatrixAt(k++,mx)}inner.add(im);
+  // cheatline + windscreen
+  for(const m of[1,-1]){const cl=new T.Mesh(new T.BoxGeometry(s.L-s.nL-s.tL,s.R*.07,.06),acc);cl.position.set((s.L-s.nL+s.tL)/2,s.R*.05,m*s.R*.995);inner.add(cl)}
+  {const x=s.L-s.nL*.6,r=rAt(s,x);const ws=new T.Mesh(new T.BoxGeometry(s.nL*.28,r*.22,r*1.25),dark);ws.position.set(x,r*.62,0);ws.rotation.z=-.42;inner.add(ws)}
+  // hump for 747
+  if(s.id==='b747'){const hg=new T.SphereGeometry(1,32,16,0,Math.PI*2,0,Math.PI/2);hg.scale(s.L*.17,s.R*.42,s.R*.78);const h=new T.Mesh(hg,white);h.position.set(s.L-s.nL-s.L*.1,s.R*.62,0);inner.add(h)}
+  inner.position.set(-s.L/2,0,0);
+  g.scale.setScalar(11/Math.max(s.L,s.W));
+  return g;
+}
+function softTex(){const c=document.createElement('canvas');c.width=c.height=128;const x=c.getContext('2d');const gr=x.createRadialGradient(64,64,0,64,64,64);gr.addColorStop(0,'rgba(255,255,255,1)');gr.addColorStop(.4,'rgba(255,255,255,.55)');gr.addColorStop(1,'rgba(255,255,255,0)');x.fillStyle=gr;x.fillRect(0,0,128,128);return new THREE.CanvasTexture(c)}
+function makeViewer(cv,opt){
+  if(!HAS3D)return null;const T=THREE;
+  const r=new T.WebGLRenderer({canvas:cv,antialias:true,alpha:true});r.setPixelRatio(Math.min(devicePixelRatio,2));
+  r.outputEncoding=T.sRGBEncoding;r.toneMapping=T.ACESFilmicToneMapping;r.toneMappingExposure=1.05;
+  const sc=new T.Scene(),cam=new T.PerspectiveCamera(opt.fov||32,1,.1,300);cam.position.set(...opt.cam);cam.lookAt(...(opt.look||[0,0,0]));
+  sc.add(new T.HemisphereLight(0xcfe3ff,0x3a2a2a,.85));
+  const sun=new T.DirectionalLight(opt.sun||0xffe0bd,1.7);sun.position.set(6,10,8);sc.add(sun);
+  const rim=new T.DirectionalLight(0x6fa8ff,.9);rim.position.set(-8,3,-10);sc.add(rim);
+  if(opt.grid){const gh=new T.GridHelper(40,40,0x2ee6ff,0x16406e);gh.position.y=-3.2;gh.material.transparent=true;gh.material.opacity=.45;sc.add(gh)}
+  const st={model:null,yaw:0,pitch:0,dy:0,dp:0,drag:false,lx:0,ly:0,active:true,t:0};
+  const clouds=[],streaks=[];
+  if(opt.clouds){const tex=softTex();for(let i=0;i<70;i++){const m=new T.SpriteMaterial({map:tex,color:i%3?0xffe6d6:0xffffff,transparent:true,opacity:.35+Math.random()*.35,depthWrite:false});
+      const sp=new T.Sprite(m);const sz=4+Math.random()*9;sp.scale.set(sz*1.8,sz,1);sp.position.set(-40+Math.random()*80,-11+Math.random()*6+(Math.random()<.2?7:0),-40+Math.random()*36);sc.add(sp);clouds.push(sp)}
+    const lg=new T.BufferGeometry(),arr=new Float32Array(40*6);lg.setAttribute('position',new T.BufferAttribute(arr,3));
+    for(let i=0;i<40;i++)streaks.push({x:-30+Math.random()*60,y:-4+Math.random()*9,z:-12+Math.random()*16,l:1+Math.random()*3});
+    const ls=new T.LineSegments(lg,new T.LineBasicMaterial({color:0xffffff,transparent:true,opacity:.28}));sc.add(ls);st.ls=ls}
+  function size(){const w=cv.clientWidth,h=cv.clientHeight;if(!w||!h)return;r.setSize(w,h,false);cam.aspect=w/h;cam.updateProjectionMatrix()}
+  new ResizeObserver(size).observe(cv);size();
+  cv.addEventListener('pointerdown',e=>{st.drag=true;st.lx=e.clientX;st.ly=e.clientY;cv.setPointerCapture(e.pointerId)});
+  cv.addEventListener('pointermove',e=>{if(!st.drag)return;st.dy+=(e.clientX-st.lx)*.008;st.dp+=(e.clientY-st.ly)*.005;st.dp=Math.max(-.9,Math.min(.9,st.dp));st.lx=e.clientX;st.ly=e.clientY});
+  cv.addEventListener('pointerup',()=>st.drag=false);
+  let last=performance.now();
+  (function loop(n){requestAnimationFrame(loop);const dt=Math.min(.05,(n-last)/1000);last=n;if(!st.active)return;st.t+=dt;
+    if(st.model){const m=st.model;
+      if(opt.auto&&!st.drag)st.dy+=dt*.35;
+      if(!opt.auto&&!st.drag){st.dy*=.985;st.dp*=.97}
+      m.rotation.set(0,0,0);m.rotateY((opt.yaw0||0)+st.dy);m.rotateX(st.dp);
+      if(opt.clouds){m.rotateX(Math.sin(st.t*.5)*.1);m.rotateZ(Math.sin(st.t*.33)*.04+.03);m.position.y=Math.sin(st.t*.7)*.25}
+      for(const pr of m.userData.props)pr.rotation.x+=dt*40}
+    if(opt.clouds){for(const c of clouds){c.position.x-=dt*18*(1+(c.position.z+30)/40);if(c.position.x<-45)c.position.x=45}
+      const a=st.ls.geometry.attributes.position.array;streaks.forEach((s2,i)=>{s2.x-=dt*60;if(s2.x<-30)s2.x=30;a.set([s2.x,s2.y,s2.z,s2.x+s2.l,s2.y,s2.z],i*6)});st.ls.geometry.attributes.position.needsUpdate=true}
+    r.render(sc,cam)})(last);
+  return{st,set(p){if(st.model){sc.remove(st.model);st.model.traverse(o=>{o.geometry&&o.geometry.dispose()})}st.model=build3D(p);sc.add(st.model);st.dy=0;st.dp=0},size};
+}
+
+/* ---------- scroll fx ---------- */
+addEventListener('scroll',()=>{const h=document.documentElement;$('#prog').style.width=(scrollY/(h.scrollHeight-innerHeight)*100)+'%';$('#nav').classList.toggle('solid',scrollY>40);
+  let cur='';$$('section').forEach(s=>{if(scrollY>=s.offsetTop-160)cur=s.id});$$('nav a').forEach(a=>a.classList.toggle('on',a.getAttribute('href')==='#'+cur))},{passive:true});
+const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('show');io.unobserve(e.target)}}),{threshold:.12});
+function observe(){$$('.reveal:not(.show)').forEach(el=>io.observe(el))}
+
+/* ---------- HERO ---------- */
+const heroIds=['b747','a380','b787','concorde','a350','atr72'].filter(byId);
+const hv=makeViewer($('#heroCv'),{cam:[14,3.2,17.5],look:innerWidth>900?[-4.2,-1.6,0]:[0,-2.2,0],clouds:true,yaw0:-.25});
+let roT=0,roTarget={spd:0,alt:0};
+function heroSet(id){const p=byId(id);if(!p)return;$$('.mbtn').forEach(b=>b.classList.toggle('on',b.dataset.id===id));
+  if(hv)hv.set(p);else $('#heroCv').outerHTML=`<div style="position:absolute;inset:15% 10% 35% 35%">${topSVG(p)}</div>`;
+  $('#roName').textContent=(p.code||p.name)+' · '+p.name;roTarget={spd:p.speed,alt:Math.round((p.ceiling?p.ceiling*3.281*.88:37000)/100)*100}}
+$('#models').innerHTML=heroIds.map(id=>`<button class="mbtn" data-id="${id}">${byId(id).code||byId(id).name}</button>`).join('');
+$('#models').onclick=e=>{const b=e.target.closest('.mbtn');if(b)heroSet(b.dataset.id)};
+heroSet(heroIds[0]);
+if(hv)new IntersectionObserver(es=>{hv.st.active=es[0].isIntersecting}).observe($('#hero'));
+let cs={spd:0,alt:0,hdg:87};
+setInterval(()=>{cs.spd+=(roTarget.spd-cs.spd)*.12+(Math.random()-.5)*2;cs.alt+=(roTarget.alt-cs.alt)*.1+(Math.random()-.5)*20;cs.hdg=(cs.hdg+(Math.random()-.5)*.6+360)%360;
+  $('#roSpd').textContent=Math.round(cs.spd)+' KM/H';$('#roAlt').textContent=fmt(Math.round(cs.alt/10)*10);$('#roHdg').textContent=String(Math.round(cs.hdg)).padStart(3,'0')+'°'},120);
+
+/* ---------- FLEET ---------- */
+const cats=['전체',...new Set(PLANES.map(p=>p.category))];let cat='전체';
+$('#chips').innerHTML=cats.map(c=>`<button class="chip${c==='전체'?' on':''}" data-c="${c}">${c}</button>`).join('');
+$('#chips').onclick=e=>{const b=e.target.closest('.chip');if(!b)return;cat=b.dataset.c;$$('#chips .chip').forEach(x=>x.classList.toggle('on',x===b));render()};
+$('#q').oninput=render;$('#sort').onchange=render;
+const stc=s=>s==='운항 중'?'live':s==='은퇴'?'ret':'part';
+const stEn=s=>s==='운항 중'?'IN SERVICE':s==='은퇴'?'RETIRED':'LIMITED';
+function tilt(el){el.addEventListener('pointermove',e=>{const b=el.getBoundingClientRect(),x=(e.clientX-b.left)/b.width,y=(e.clientY-b.top)/b.height;
+  el.style.transform=`rotateY(${(x-.5)*18}deg) rotateX(${(.5-y)*14}deg) translateZ(10px)`;el.style.setProperty('--mx',x*100+'%');el.style.setProperty('--my',y*100+'%')});
+  el.addEventListener('pointerleave',()=>el.style.transform='')}
+function render(){
+  const q=$('#q').value.trim().toLowerCase(),k=$('#sort').value;
+  const list=PLANES.filter(p=>(cat==='전체'||p.category===cat)&&(!q||[p.name,p.nick,p.maker,p.code,p.country].join(' ').toLowerCase().includes(q)))
+    .sort((a,b)=>k==='firstFlight'?a.firstFlight-b.firstFlight:(b[k]||0)-(a[k]||0));
+  $('#grid').innerHTML=list.length?list.map((p,i)=>`<div class="glow card reveal" style="transition-delay:${i%4*60}ms" data-id="${p.id}" tabindex="0"><div class="in"><div class="light"></div>
+    <div class="ctop"><span class="code">${p.code||p.id.toUpperCase()}</span><span class="st ${stc(p.status)}">${stEn(p.status)}</span></div>
+    <div class="pic">${topSVG(p)}</div>
+    <h3>${p.name}</h3><div class="nick">${p.nick} · ${p.maker} · ${p.firstFlight}</div>
+    <div class="spec3"><div><b>${fmt(p.seats)}</b><span>SEATS</span></div><div><b>${fmt(p.speed)}</b><span>KM/H</span></div><div><b>${fmt(p.range)}</b><span>RANGE KM</span></div></div></div></div>`).join(''):'<div class="empty">검색 결과가 없어요.</div>';
+  $$('#grid .card').forEach(c=>{tilt(c);c.onclick=()=>openP(c.dataset.id);c.onkeydown=e=>{if(e.key==='Enter')openP(c.dataset.id)}});observe();
+}
+const mx=k=>Math.max(...PLANES.map(p=>p[k]||0));
+const BARS=[['seats','좌석 수','석'],['length','기체 길이','m'],['wingspan','날개폭','m'],['speed','순항 속도','km/h'],['range','항속 거리','km'],['mtow','최대이륙중량','t']];
+let mv=null;
+function openP(id){const p=byId(id);if(!p)return;
+  $('#vlab').innerHTML=`<span class="code">${p.code||''}</span><h3>${p.name}</h3><div class="nick">${p.nick}</div>`;
+  $('#mdet').innerHTML=`<div class="tbl">
+    <div><span>MANUFACTURER</span><b>${p.maker}</b></div><div><span>COUNTRY</span><b>${p.country}</b></div>
+    <div><span>FIRST FLIGHT</span><b>${p.firstFlight}년</b></div><div><span>STATUS</span><b>${p.status}</b></div>
+    <div><span>ENGINES</span><b>${p.engines}발${p.engine?' · '+p.engine:''}</b></div><div><span>CATEGORY</span><b>${p.category}</b></div>
+    <div><span>MTOW</span><b>${p.mtow?fmt(p.mtow)+' t':'—'}</b></div><div><span>SERVICE CEILING</span><b>${p.ceiling?fmt(p.ceiling)+' m':'—'}</b></div></div>
+    <p class="sum">${p.summary}</p>
+    <div class="lbl">PERFORMANCE · 전체 기종 중 최댓값 대비</div>
+    <div class="bars">${BARS.filter(([k])=>p[k]).map(([k,n,u])=>`<div class="bar"><label>${n}<b>${fmt(p[k])} ${u}</b></label><div class="t"><div class="f" data-w="${p[k]/mx(k)*100}"></div></div></div>`).join('')}</div>
+    <div class="lbl">ENGINEERING NOTES</div><ol class="facts">${(p.facts||[]).map(f=>`<li><span>${f}</span></li>`).join('')}</ol>
+    ${p.korea?`<div class="note"><b>국내 운용</b> · ${p.korea}</div>`:''}
+    ${p.word?`<div class="note" style="border-color:var(--c1);background:#2ee6ff10"><b>용어 · ${p.word.term}</b><br>${p.word.meaning}</div>`:''}`;
+  $('#modal').classList.add('open');document.body.style.overflow='hidden';$('#mdet').scrollTop=0;
+  if(HAS3D){if(!mv)mv=makeViewer($('#mCv'),{cam:[9,3.4,10.5],look:[0,-.3,0],grid:true,auto:true,fov:34,sun:0xffffff});mv.st.active=true;mv.set(p);setTimeout(mv.size,30)}
+  else $('#mview').insertAdjacentHTML('afterbegin',`<div style="position:absolute;inset:20%">${topSVG(p)}</div>`);
+  setTimeout(()=>$$('#mdet .f').forEach(f=>f.style.width=f.dataset.w+'%'),120);
+}
+function closeM(){$('#modal').classList.remove('open');document.body.style.overflow='';if(mv)mv.st.active=false}
+$('#mclose').onclick=closeM;$('#modal').onclick=e=>{if(e.target.id==='modal')closeM()};addEventListener('keydown',e=>{if(e.key==='Escape')closeM()});
+render();
+
+/* ---------- SCALE ---------- */
+const opts=PLANES.map(p=>`<option value="${p.id}">${p.code||''} · ${p.name}</option>`).join('');
+$('#ca').innerHTML=opts;$('#cb').innerHTML=opts;$('#ca').value=byId('a380')?'a380':PLANES[0].id;$('#cb').value=byId('b737')?'b737':PLANES[1].id;
+function cmp(){const a=byId($('#ca').value),b=byId($('#cb').value);if(!a||!b)return;
+  const ML=Math.max(a.length,b.length),MW=Math.max(a.wingspan,b.wingspan),pad=6,VW=ML+pad*2+16,VH=MW+pad*2;
+  const ga=topGroup(a,{fill:'#2ee6ff1c',stroke:'#2ee6ff',sw:.18,eng:'#2ee6ff30'}),gb=topGroup(b,{fill:'#ffb34722',stroke:'#ffb347',sw:.18,eng:'#ffb34730'});
+  let grid='';for(let x=0;x<=VW;x+=5)grid+=`<line x1="${x}" y1="0" x2="${x}" y2="${VH}"/>`;for(let y=0;y<=VH;y+=5)grid+=`<line x1="0" y1="${y}" x2="${VW}" y2="${y}"/>`;
+  const ox=pad+16;
+  $('#bp').innerHTML=`<svg viewBox="0 0 ${VW} ${VH}"><g stroke="#2ee6ff" stroke-opacity=".1" stroke-width=".08">${grid}</g>
+   <g transform="translate(${ox+(ML-a.length)/2} ${VH/2})">${ga.g}</g><g transform="translate(${ox+(ML-b.length)/2} ${VH/2})">${gb.g}</g>
+   <g transform="translate(${pad*.5} ${VH-pad-2.5})"><rect width="12" height="2.5" rx=".4" fill="#8d99b3" opacity=".7"/><text x="0" y="-1" font-size="1.6" fill="#8d99b3" font-family="Rajdhani">BUS 12m</text></g>
+   <g transform="translate(${pad*.5} ${pad})" font-family="Rajdhani" font-size="1.8"><line x1="0" y1="0" x2="10" y2="0" stroke="#fff" stroke-width=".2"/><line x1="0" y1="-.8" x2="0" y2=".8" stroke="#fff" stroke-width=".2"/><line x1="10" y1="-.8" x2="10" y2=".8" stroke="#fff" stroke-width=".2"/><text x="2.6" y="2.6" fill="#fff">10 m</text></g>
+   <text x="${VW-pad}" y="${pad}" text-anchor="end" font-family="Rajdhani" font-size="2.2" fill="#2ee6ff">${a.code||a.name} · ${a.length}m × ${a.wingspan}m</text>
+   <text x="${VW-pad}" y="${pad+3}" text-anchor="end" font-family="Rajdhani" font-size="2.2" fill="#ffb347">${b.code||b.name} · ${b.length}m × ${b.wingspan}m</text></svg>`;
+  $('#crows').innerHTML=BARS.filter(([k])=>a[k]&&b[k]).map(([k,n,u])=>{const m=Math.max(a[k],b[k]);return `<div class="crow"><div class="l"><i style="width:${a[k]/m*100}%"></i></div><div class="m">${n} (${u})<b><span class="${a[k]>=b[k]?'wa':''}">${fmt(a[k])}</span><span>:</span><span class="${b[k]>=a[k]?'wb':''}">${fmt(b[k])}</span></b></div><div class="r"><i style="width:${b[k]/m*100}%"></i></div></div>`}).join('');}
+$('#ca').onchange=cmp;$('#cb').onchange=cmp;cmp();
+
+/* ---------- PHYSICS ---------- */
+const simP=byId('b787')||PLANES[0];
+$('#simplane').innerHTML=sideSVG(simP);
+(function(){const sky=$('#simsky');for(let i=0;i<6;i++){const c=document.createElement('div');c.className='cl';c.style.cssText=`top:${10+Math.random()*80}%;width:${120+Math.random()*200}px;animation-duration:${4+Math.random()*5}s;animation-delay:${-Math.random()*8}s;opacity:${.4+Math.random()*.5}`;sky.prepend(c)}
+  for(let i=0;i<14;i++){const s=document.createElement('div');s.className='sp1';s.style.cssText=`top:${Math.random()*100}%;width:${60+Math.random()*120}px;animation-duration:${.6+Math.random()*.8}s;animation-delay:${-Math.random()}s`;sky.prepend(s)}})();
+const FC={up:'#3dffa8',down:'#ff5c7a',forward:'#ffb347',back:'#2ee6ff'};
+$('#forces').innerHTML=L.forces.map(f=>{const c=FC[f.dir]||f.color;return `<div class="glow fc reveal"><div class="in"><h3 style="color:${c}">${f.name}<small>${(f.en||'').toUpperCase()}</small></h3><div class="bar2" style="background:${c};box-shadow:0 0 10px ${c}"></div><p>${f.desc}</p><p class="ex">${f.example||''}</p></div></div>`}).join('');
+let sim={alt:12000,vs:0,top:50,bank:0,t:0};
+function simCalc(){const t=+$('#thr').value,a=+$('#aoa').value;$('#tv').textContent=t+'%';$('#av').textContent=a+'°';
+  const spd=t*9.2,stall=a>=14||(a>=11&&t<45),lift=stall?t*.25:t*(0.35+a*0.07),W=38.5,drag=t*.3+a*a*.12;
+  let vs=Math.max(-3500,Math.min(3500,(lift-W)*95));if(t<12)vs=-1800;if(stall)vs=-3200;
+  let m,warn=false;
+  if(stall){m='STALL — 받음각이 임계각을 넘어 날개 윗면의 공기 흐름이 떨어져 나갔어요. 양력이 급격히 줄어 추락해요. 받음각을 줄이세요!';warn=true}
+  else if(t<12){m='추력이 거의 없어요. 속도가 떨어지면 양력도 함께 줄어들어요.';warn=true}
+  else if(vs>300)m='상승 중 — 양력이 무게보다 커요. 대신 받음각이 커질수록 유도항력도 커져요.';
+  else if(vs<-300)m='하강 중 — 무게가 양력보다 커요. 추력을 높이거나 받음각을 키워 보세요.';
+  else m='수평 순항 — 양력과 무게, 추력과 항력이 균형을 이루고 있어요.';
+  return{t,a,spd,lift,W,drag,vs,m,warn,stall}}
+function simDraw(){const c=simCalc();$('#msg').textContent=c.m;$('#msg').style.borderColor=c.warn?'var(--bad)':'var(--line)';$('#msg').style.color=c.warn?'#ffb3c0':'';
+  sim.vs=c.vs;const pitch=c.a*(c.stall?.6:1)+c.vs/600;
+  sim.top=50-Math.max(-28,Math.min(28,c.vs/110));
+  $('#simplane').style.top=sim.top+'%';$('#simplane').style.transform=`translate(-50%,-50%) rotate(${-pitch}deg)`;
+  const sc=v=>Math.max(12,Math.min(120,v*1.6));
+  $('#arws').innerHTML=`<div class="arw" style="left:50%;top:calc(${sim.top}% - 40px);transform:translate(-50%,-100%);flex-direction:column;color:${FC.up}"><span>LIFT</span><i style="width:6px;height:${sc(c.lift)}px;background:${FC.up};box-shadow:0 0 10px ${FC.up}"></i></div>
+   <div class="arw" style="left:50%;top:calc(${sim.top}% + 30px);transform:translateX(-50%);flex-direction:column;color:${FC.down}"><i style="width:6px;height:${sc(c.W)}px;background:${FC.down};box-shadow:0 0 10px ${FC.down}"></i><span>WEIGHT</span></div>
+   <div class="arw" style="left:calc(50% + 160px);top:${sim.top}%;transform:translateY(-50%);color:${FC.forward}"><i style="height:6px;width:${sc(c.t*.6)}px;background:${FC.forward};box-shadow:0 0 10px ${FC.forward}"></i><span>THRUST</span></div>
+   <div class="arw" style="right:calc(50% + 160px);top:${sim.top}%;transform:translateY(-50%);color:${FC.back}"><span>DRAG</span><i style="height:6px;width:${sc(c.drag*.8)}px;background:${FC.back};box-shadow:0 0 10px ${FC.back}"></i></div>`;
+  $('#rSpd').textContent=Math.round(c.spd);$('#rLw').textContent=(c.lift/c.W).toFixed(2);$('#rLw').className=c.stall?'warn':'';
+  sim.pitch=pitch}
+$('#thr').oninput=simDraw;$('#aoa').oninput=simDraw;simDraw();
+let lastS=performance.now();(function sl(n){requestAnimationFrame(sl);const dt=Math.min(.05,(n-lastS)/1000);lastS=n;sim.t+=dt;
+  sim.alt=Math.max(0,Math.min(45000,sim.alt+sim.vs*dt*.5));if(sim.alt===0&&sim.vs<0){}
+  const bank=Math.sin(sim.t*.6)*4;$('#hor').setAttribute('transform',`rotate(${bank} 150 150) translate(0 ${Math.max(-30,Math.min(30,sim.pitch||0))*4})`);
+  $('#rAlt').textContent=fmt(Math.round(sim.alt/10)*10);$('#rVs').textContent=(sim.vs>0?'+':'')+fmt(Math.round(sim.vs/10)*10);$('#rVs').className=sim.vs<-2500?'warn':''})(lastS);
+
+/* ---------- ANATOMY ---------- */
+(function(){const ref=byId('a350')||byId('b777')||PLANES[0];const {g,s,minY,maxY,wy}=sideGroup(ref,{blue:true,gear:true});
+  const fb=-s.R*.55,cx=engX(s,s.engZ[0]);
+  const H={cockpit:[s.L-s.nL*.6,-s.R*.4,'COCKPIT'],fuselage:[s.L*.55,-s.R*.1,'FUSELAGE'],wing:[s.leX-s.cr*.45,wy+s.R*.12,'WING'],engine:[cx,wy+s.eR*.9,'ENGINE'],
+    flap:[s.leX-s.cr*.92,wy+s.R*.12,'FLAP'],vtail:[s.fin[0][0]-s.L*.09,fb-s.fh*.55,'V-TAIL'],htail:[s.hstab?s.hstab[0][0]-0.07*s.L:4,-upAt(s,.12*s.L)*.6,'H-TAIL'],gear:[s.L-s.nL-1.2,s.R+1.9,'GEAR']};
+  const r=s.L/110,fs=s.L/55;
+  const hs=Object.entries(H).map(([k,[x,y,n]])=>`<g class="hs" data-z="${k}"><circle class="o" cx="${x}" cy="${y}" r="${r*2}" stroke-width="${r*.35}"/><circle class="c" cx="${x}" cy="${y}" r="${r*.9}"/><text x="${x+r*1.8}" y="${y-r*1.6}" font-size="${fs}">${n}</text><circle cx="${x}" cy="${y}" r="${r*4}" fill="transparent"/></g>`).join('');
+  const sv=$('#anaSvg');sv.setAttribute('viewBox',`-2 ${minY-2} ${s.L+6} ${maxY-minY+4}`);sv.innerHTML=g+hs;
+  $('#plist').innerHTML=L.parts.map(p=>`<button class="chip" data-z="${p.id}">${p.name}</button>`).join('');
+  function show(z){const p=L.parts.find(x=>x.id===z);if(!p)return;$('#pside').querySelector('.k').textContent=(H[z]||['','',''])[2];$('#pside').querySelector('h3').textContent=p.name;$('#pside').querySelector('p').textContent=p.desc;
+    $$('.hs').forEach(h=>h.classList.toggle('on',h.dataset.z===z));$$('#plist .chip').forEach(h=>h.classList.toggle('on',h.dataset.z===z))}
+  sv.onclick=e=>{const h=e.target.closest('.hs');if(h)show(h.dataset.z)};$('#plist').onclick=e=>{const h=e.target.closest('[data-z]');if(h)show(h.dataset.z)};})();
+
+/* ---------- PROFILE ---------- */
+(function(){const J=L.journey;if(!J.length)return;
+  const sv=$('#profSvg');const d='M20,240 L300,240 C380,240 420,60 520,52 L760,52 C840,52 880,240 930,240 L985,240';
+  let grid='';for(let y=52;y<=240;y+=47)grid+=`<line x1="20" y1="${y}" x2="985" y2="${y}" stroke="#ffffff10"/>`;
+  sv.innerHTML=`<defs><linearGradient id="pf" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2ee6ff" stop-opacity=".25"/><stop offset="1" stop-color="#2ee6ff" stop-opacity="0"/></linearGradient></defs>${grid}
+   <text x="22" y="46" font-family="Rajdhani" font-size="12" fill="#5a6680" letter-spacing="2">FL370</text><text x="22" y="262" font-family="Rajdhani" font-size="12" fill="#5a6680" letter-spacing="2">GROUND</text>
+   <path d="${d} L985,250 L20,250Z" fill="url(#pf)"/><path id="pp" d="${d}" fill="none" stroke="#2ee6ff" stroke-width="2.5" style="filter:drop-shadow(0 0 6px #2ee6ff)"/>
+   <path id="ppd" d="${d}" fill="none" stroke="#ffb347" stroke-width="3"/><g id="pdots"></g>
+   <g id="pplane"><path d="M14,0 L-10,-4 L-14,-12 L-18,-12 L-15,-2 L-18,0 L-15,2 L-18,12 L-14,12 L-10,4Z" fill="#fff" transform="rotate(0)"/></g>`;
+  const pp=$('#pp'),len=pp.getTotalLength(),T=[.03,.13,.25,.37,.58,.87,.985];
+  $('#ppd').style.strokeDasharray=len;$('#ppd').style.strokeDashoffset=len;$('#ppd').style.transition='stroke-dashoffset .9s ease';
+  $('#pdots').innerHTML=T.map((t,i)=>{const pt=pp.getPointAtLength(len*t);return `<circle cx="${pt.x}" cy="${pt.y}" r="5" fill="#04060d" stroke="#2ee6ff" stroke-width="2"/><text x="${pt.x}" y="${pt.y+(pt.y>200?-14:22)}" text-anchor="middle" font-family="Rajdhani" font-weight="700" font-size="12" fill="#8d99b3">${J[i]?J[i].icon:''}</text>`}).join('');
+  $('#steps').innerHTML=J.map((j,i)=>`<button class="step" data-i="${i}"><b>${j.icon}</b><small>${j.title}</small></button>`).join('');
+  let cur=0,anim=null;
+  function place(t){const pt=pp.getPointAtLength(len*t),p2=pp.getPointAtLength(Math.min(len,len*t+2)),ang=Math.atan2(p2.y-pt.y,p2.x-pt.x)*180/Math.PI;$('#pplane').setAttribute('transform',`translate(${pt.x} ${pt.y-8}) rotate(${ang})`)}
+  function go(i){const from=T[cur],to=T[i];cur=i;cancelAnimationFrame(anim);const st=performance.now();
+    (function f(n){const k=Math.min(1,(n-st)/900),e=1-Math.pow(1-k,3);place(from+(to-from)*e);if(k<1)anim=requestAnimationFrame(f)})(st);
+    $('#ppd').style.strokeDashoffset=len*(1-to);
+    $$('.step').forEach((b,k)=>b.classList.toggle('on',k===i));const j=J[i];$('#pT').textContent=`${String(i+1).padStart(2,'0')} · ${j.title}`;$('#pD').textContent=j.desc;
+    $('#pAlt').textContent=fmt(j.alt||0);$('#pSpd').textContent=fmt(j.spd||0)}
+  $('#steps').onclick=e=>{const b=e.target.closest('.step');if(b)go(+b.dataset.i)};place(T[0]);go(0);})();
+
+/* ---------- TIMELINE ---------- */
+$('#tl').innerHTML=L.history.map(h=>`<div class="ti glow reveal"><div class="in"><div class="yr">${h.year}</div><div><h3>${h.title}</h3><p>${h.desc}</p></div></div></div>`).join('');
+
+/* ---------- TEST ---------- */
+let qi=0,score=0,QS=[];
+function shuf(){QS=L.quiz.map(q=>{const idx=q.options.map((_,i)=>i).sort(()=>Math.random()-.5);return{...q,options:idx.map(i=>q.options[i]),answer:idx.indexOf(q.answer)}})}
+shuf();
+function qShow(){const Q=QS;if(!Q.length)return;
+  if(qi>=Q.length){const r=score/Q.length,n=r>=.9?4:r>=.7?3:r>=.45?2:1,R=[null,['비행 훈련생','CADET','기초 이론부터 다시 점검해 봐요. 도감과 물리 섹션이 도움이 될 거예요.'],['수습 부기장','SECOND OFFICER','기본기는 갖췄어요. 틀린 문제의 해설을 다시 읽어 보세요.'],['부기장','FIRST OFFICER','훌륭해요. 기장까지 한 걸음 남았어요.'],['기장','CAPTAIN','완벽에 가까워요. 비행기를 맡겨도 되겠어요.']][n];
+    $('#qbox').innerHTML=`<div class="res"><div class="hud" style="color:var(--sub);font-size:13px">RESULT · ${R[1]}</div><div class="epa">${'<i></i>'.repeat(n)}</div><div class="sc">${score}/${Q.length}</div><h3>${R[0]}</h3><p>${R[2]}</p><button class="btn" id="qre">다시 응시하기</button></div>`;
+    $('#qre').onclick=()=>{qi=0;score=0;shuf();qShow()};return}
+  const q=Q[qi];
+  $('#qbox').innerHTML=`<div class="qh"><span>QUESTION <b>${String(qi+1).padStart(2,'0')}</b> / ${Q.length}</span><span>SCORE <b>${score}</b></span></div><div class="qbar"><i style="width:${qi/Q.length*100}%"></i></div>
+   <div class="qq">${q.q}</div><div class="opts">${q.options.map((o,i)=>`<button class="opt" data-i="${i}"><span>${'ABCD'[i]}</span>${o}</button>`).join('')}</div><div class="exp" id="exp"></div>`;
+  $$('.opt').forEach(b=>b.onclick=()=>{const i=+b.dataset.i,ok=i===q.answer;if(ok)score++;
+    $$('.opt').forEach(x=>{x.disabled=true;if(+x.dataset.i===q.answer)x.classList.add('ok')});if(!ok)b.classList.add('no');
+    $('#exp').style.display='block';$('#exp').innerHTML=`<b style="color:${ok?'var(--ok)':'var(--bad)'}">${ok?'CORRECT':'INCORRECT'}</b> · ${q.explain}<div class="nx"><button class="btn" id="qn">${qi+1<Q.length?'다음 문제':'결과 보기'}</button></div>`;
+    $('#qn').onclick=()=>{qi++;qShow()}})}
+qShow();
+observe();
+</script>
+</body>
+</html>
