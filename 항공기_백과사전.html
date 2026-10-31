@@ -100,6 +100,7 @@ section{padding:110px 0 40px;position:relative}
 .ctop{display:flex;justify-content:space-between;align-items:center;transform:translateZ(30px)}
 .code{font-family:var(--hud);font-weight:700;font-size:15px;letter-spacing:.14em;color:var(--c1)}
 .st{font-family:var(--hud);font-weight:700;font-size:11px;letter-spacing:.14em;padding:3px 8px;border-radius:6px;border:1px solid}
+.st.flag{color:#04060d;background:linear-gradient(90deg,var(--c1),var(--c4));border-color:transparent}
 .st.live{color:var(--ok);border-color:#3dffa855}.st.ret{color:var(--bad);border-color:#ff5c7a55}.st.part{color:var(--c4);border-color:#ffb34755}
 .card .pic{height:150px;margin:6px -6px;display:grid;place-items:center;transform:translateZ(60px);
   background:radial-gradient(ellipse at center,#2ee6ff14,transparent 70%)}
@@ -320,7 +321,7 @@ footer{padding:60px 20px 70px;text-align:center;color:var(--dim);font-size:13px;
   <div class="sh reveal"><div class="num">01</div><h2>여객기 도감</h2><p>대표 여객기의 제원을 카드로 정리했어요. 카드를 누르면 3D 모델과 상세 제원, 설계 이야기를 볼 수 있어요.</p></div>
   <div class="tools reveal"><div id="chips" style="display:flex;gap:8px;flex-wrap:wrap"></div><div class="sp"></div>
     <input class="inp" id="q" placeholder="모델명·제조사 검색" style="min-width:200px">
-    <select class="inp" id="sort"><option value="firstFlight">첫 비행 순</option><option value="seats">좌석 수</option><option value="speed">순항 속도</option><option value="range">항속 거리</option><option value="mtow">최대이륙중량</option><option value="length">기체 길이</option></select></div>
+    <select class="inp" id="sort"><option value="flagship">대표 기종 순</option><option value="firstFlight">첫 비행 순</option><option value="seats">좌석 수</option><option value="speed">순항 속도</option><option value="range">항속 거리</option><option value="mtow">최대이륙중량</option><option value="length">기체 길이</option></select></div>
   <div class="grid" id="grid"></div>
 </div></section>
 
@@ -597,7 +598,11 @@ window.LEARN = {
 </script>
 
 <script>
-const PLANES=[...(window.PLANES_A||[]),...(window.PLANES_B||[])];
+/* 데이터를 못 불러와도 비지 않도록 넣어 둔 기본 플래그십 2기 */
+const FLAGSHIP_DEFAULT=[{"id":"b747","name":"보잉 747","nick":"점보","code":"B747-400","maker":"보잉","country":"미국","flag":"🇺🇸","firstFlight":1969,"category":"쌍통로 대형기","seats":416,"length":70.6,"wingspan":64.4,"speed":920,"range":13450,"engines":4,"status":"일부 운항","color":"#c0392b","emoji":"✈️","mtow":396.9,"ceiling":13700,"engine":"PW4056 / CF6-80C2","summary":"보잉 747은 1970년 취항한 세계 최초의 광동체(객실 통로가 두 개인 넓은 동체) 여객기로, 약 50년간 장거리 항공 시장을 이끌었습니다. 엔진 4개를 단 사발기(四發機)로 터보팬(대형 팬으로 공기를 밀어내 추력을 얻는 제트엔진)의 높은 효율을 활용해 대양 횡단 노선을 대중화했습니다. 2층 구조의 앞부분 덕분에 화물기와 정부 전용기로도 폭넓게 개조되었습니다.","facts":["1970년 팬암(Pan Am)이 뉴욕-런던 노선에 처음 투입했고, 이전 최대 기종인 707보다 좌석 수가 두 배 이상 많았습니다.","화물기로 전환할 것을 염두에 두고 조종석을 위층에 배치했으며, 그 결과 기수 부분이 위로 열리는 화물 적재 구조가 가능해졌습니다.","총 1,500대 이상 생산되었고, 2023년 1월 마지막 747-8이 인도되며 54년간의 생산이 끝났습니다."],"korea":"대한항공이 747-400과 최신형 747-8i를 장거리 노선과 화물 수송에 운용했고, 아시아나항공도 747-400을 운용했으나 현재는 대부분 퇴역했습니다.","word":{"term":"광동체(와이드바디)","meaning":"객실 안에 통로가 두 개 있는 폭 넓은 동체 구조로, 한 줄에 7석 이상을 배치할 수 있는 대형 여객기를 가리킵니다."}},{"id":"a380","name":"에어버스 A380","nick":"슈퍼점보","code":"A380-800","mtow":575,"ceiling":13100,"engine":"Trent 900","korea":"대한항공이 2011년부터 10대 안팎을 운용했고 아시아나항공도 6대를 도입했으나, 두 회사 모두 연료 효율 문제로 단계적으로 줄이는 추세다.","maker":"에어버스","country":"유럽(프랑스 등)","flag":"🇪🇺","firstFlight":2005,"category":"쌍통로 대형기","seats":525,"length":72.7,"wingspan":79.8,"speed":903,"range":15000,"engines":4,"status":"일부 운항","color":"#1e6fd9","emoji":"✈️","summary":"A380은 객실 전체가 위아래 두 층으로 이뤄진 세계 최대의 양산 여객기로, 최대 853명까지 인증받았다. 터보팬(공기를 빨아들여 압축·연소시켜 추력을 얻는 제트엔진) 4기를 달고 575톤에 이르는 기체를 띄우며, 이를 수용하려면 활주로와 탑승교를 별도로 갖춘 공항이 필요하다. 2021년 마지막 기체가 인도되며 생산은 끝났지만, 항공 수요가 허브 공항에 집중되던 시대를 상징하는 기종으로 평가된다.","facts":["최대이륙중량 575톤으로, 날개 폭이 79.8m여서 일반 활주로 유도로를 그대로 쓰기 어려워 공항 시설을 개조해야 했다.","2007년 싱가포르항공이 첫 상업 운항을 시작했고, 2021년까지 총 251대가 인도되었다.","날개 앞전부터 동체까지 이어지는 대형 복합재 구조를 써서 기체 무게의 약 25%를 복합재로 채웠다."],"word":{"term":"이중 갑판","meaning":"객실이 위아래 두 층으로 나뉜 구조로, 같은 길이의 동체에서 바닥 면적을 크게 늘리는 설계 방식이다."}}];
+const FLAGSHIP_IDS=['b747','a380'];
+let PLANES=[...(window.PLANES_A||[]),...(window.PLANES_B||[])];
+if(!PLANES.length)PLANES=FLAGSHIP_DEFAULT.slice();
 const L=window.LEARN||{forces:[],parts:[],journey:[],quiz:[],history:[]};
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
 const fmt=n=>n==null||n===''?'—':Number(n).toLocaleString('ko-KR');
@@ -804,9 +809,11 @@ function tilt(el){el.addEventListener('pointermove',e=>{const b=el.getBoundingCl
 function render(){
   const q=$('#q').value.trim().toLowerCase(),k=$('#sort').value;
   const list=PLANES.filter(p=>(cat==='전체'||p.category===cat)&&(!q||[p.name,p.nick,p.maker,p.code,p.country].join(' ').toLowerCase().includes(q)))
-    .sort((a,b)=>k==='firstFlight'?a.firstFlight-b.firstFlight:(b[k]||0)-(a[k]||0));
+    .sort((a,b)=>{if(k==='flagship'){const fa=FLAGSHIP_IDS.indexOf(a.id),fb=FLAGSHIP_IDS.indexOf(b.id);
+      if(fa!==fb)return (fa<0?99:fa)-(fb<0?99:fb);return a.firstFlight-b.firstFlight}
+      return k==='firstFlight'?a.firstFlight-b.firstFlight:(b[k]||0)-(a[k]||0)});
   $('#grid').innerHTML=list.length?list.map((p,i)=>`<div class="glow card reveal" style="transition-delay:${i%4*60}ms" data-id="${p.id}" tabindex="0"><div class="in"><div class="light"></div>
-    <div class="ctop"><span class="code">${p.code||p.id.toUpperCase()}</span><span class="st ${stc(p.status)}">${stEn(p.status)}</span></div>
+    <div class="ctop"><span class="code">${p.code||p.id.toUpperCase()}</span><span style="display:flex;gap:6px">${FLAGSHIP_IDS.includes(p.id)?'<span class="st flag">FLAGSHIP</span>':''}<span class="st ${stc(p.status)}">${stEn(p.status)}</span></span></div>
     <div class="pic">${topSVG(p)}</div>
     <h3>${p.name}</h3><div class="nick">${p.nick} · ${p.maker} · ${p.firstFlight}</div>
     <div class="spec3"><div><b>${fmt(p.seats)}</b><span>SEATS</span></div><div><b>${fmt(p.speed)}</b><span>KM/H</span></div><div><b>${fmt(p.range)}</b><span>RANGE KM</span></div></div></div></div>`).join(''):'<div class="empty">검색 결과가 없어요.</div>';
@@ -839,7 +846,8 @@ render();
 
 /* ---------- SCALE ---------- */
 const opts=PLANES.map(p=>`<option value="${p.id}">${p.code||''} · ${p.name}</option>`).join('');
-$('#ca').innerHTML=opts;$('#cb').innerHTML=opts;$('#ca').value=byId('a380')?'a380':PLANES[0].id;$('#cb').value=byId('b737')?'b737':PLANES[1].id;
+$('#ca').innerHTML=opts;$('#cb').innerHTML=opts;
+$('#ca').value=byId('b747')?'b747':PLANES[0].id;$('#cb').value=byId('a380')?'a380':(PLANES[1]||PLANES[0]).id;
 function cmp(){const a=byId($('#ca').value),b=byId($('#cb').value);if(!a||!b)return;
   const ML=Math.max(a.length,b.length),MW=Math.max(a.wingspan,b.wingspan),pad=6,VW=ML+pad*2+16,VH=MW+pad*2;
   const ga=topGroup(a,{fill:'#2ee6ff1c',stroke:'#2ee6ff',sw:.18,eng:'#2ee6ff30'}),gb=topGroup(b,{fill:'#ffb34722',stroke:'#ffb347',sw:.18,eng:'#ffb34730'});
