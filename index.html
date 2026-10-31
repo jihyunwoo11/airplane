@@ -85,6 +85,8 @@ section{padding:110px 0 40px;position:relative}
 .tools{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:26px}
 .chip{cursor:pointer;font:inherit;font-size:13px;font-weight:700;color:var(--sub);background:#ffffff08;border:1px solid var(--line);padding:9px 15px;border-radius:10px;transition:.2s}
 .chip:hover{color:#fff;border-color:#ffffff40}
+.chip.mk{font-size:14px;padding:10px 16px}
+.chip.mk b{color:var(--c1);font-size:13px}.chip.mk.on b{color:#04060d}
 .chip.on{color:#04060d;background:var(--c1);border-color:var(--c1);box-shadow:0 0 18px #2ee6ff66}
 .inp{font:inherit;font-size:14px;color:#fff;background:#ffffff08;border:1px solid var(--line);padding:10px 14px;border-radius:10px;outline:none}
 .inp:focus{border-color:var(--c1)}
@@ -310,7 +312,7 @@ footer{padding:60px 20px 70px;text-align:center;color:var(--dim);font-size:13px;
   <div class="hcopy"><div class="wrap">
     <span class="tag">AIRLINER ENCYCLOPEDIA · 중학생 항공 탐구</span>
     <h1>수백 톤의 금속이<br><em>하늘에 떠 있는 이유</em></h1>
-    <p class="lead">세계의 대표 여객기 14기의 실제 제원과 설계 이야기, 그리고 양력·추력·항력을 직접 조종하며 배우는 비행의 물리학. 3D 모델을 드래그해서 돌려 보세요.</p>
+    <p class="lead">보잉과 에어버스를 중심으로 세계의 대표 여객기 <span id="nPlanes">14</span>기의 실제 제원과 설계 이야기, 그리고 양력·추력·항력을 직접 조종하며 배우는 비행의 물리학. 3D 모델을 드래그해서 돌려 보세요.</p>
     <div class="models" id="models"></div>
   </div></div>
   <div class="drag hud">◂ DRAG TO ROTATE ▸</div>
@@ -319,6 +321,7 @@ footer{padding:60px 20px 70px;text-align:center;color:var(--dim);font-size:13px;
 
 <section id="fleet"><div class="wrap">
   <div class="sh reveal"><div class="num">01</div><h2>여객기 도감</h2><p>대표 여객기의 제원을 카드로 정리했어요. 카드를 누르면 3D 모델과 상세 제원, 설계 이야기를 볼 수 있어요.</p></div>
+  <div class="tools reveal" id="mchips"></div>
   <div class="tools reveal"><div id="chips" style="display:flex;gap:8px;flex-wrap:wrap"></div><div class="sp"></div>
     <input class="inp" id="q" placeholder="모델명·제조사 검색" style="min-width:200px">
     <select class="inp" id="sort"><option value="flagship">대표 기종 순</option><option value="firstFlight">첫 비행 순</option><option value="seats">좌석 수</option><option value="speed">순항 속도</option><option value="range">항속 거리</option><option value="mtow">최대이륙중량</option><option value="length">기체 길이</option></select></div>
@@ -541,6 +544,106 @@ window.PLANES_B = [
 
 </script>
 <script>
+window.PLANES_C = [
+  {
+    id: "b727", name: "보잉 727", nick: "삼발 제트의 대명사", code: "B727-200", maker: "보잉", country: "미국", flag: "🇺🇸",
+    firstFlight: 1963, category: "단일통로 소형기", seats: 189, length: 46.7, wingspan: 32.9, speed: 870, range: 4020,
+    engines: 3, status: "은퇴", color: "#d35400", emoji: "✈️",
+    mtow: 95, ceiling: 12800, engine: "JT8D-15",
+    summary: "보잉 727은 동체 뒤쪽에 엔진 3개를 나란히 붙이고 꼬리날개를 T자로 높게 올린 독특한 모습의 중단거리 제트 여객기입니다. 짧은 활주로에서도 뜨고 내릴 수 있도록 날개에 복잡한 플랩(양력을 늘려 주는 날개 뒷부분의 접이식 판)을 달아 중소 도시 공항까지 제트 여객기 시대를 넓혔습니다. 현재 여객 운항은 거의 사라졌고 일부만 화물기나 특수 용도로 남아 있습니다.",
+    facts: [
+      "1963년 초도비행 후 1984년까지 1,832대가 생산되어, 737이 등장하기 전까지 가장 많이 팔린 제트 여객기였습니다.",
+      "기체 뒤쪽 아래에 접이식 계단(에어스테어)을 달아, 계단차가 없는 공항에서도 승객이 스스로 타고 내릴 수 있었습니다.",
+      "1971년 D.B. 쿠퍼 사건에서 범인이 뒤쪽 계단으로 뛰어내렸는데, 이 구조 때문에 이후 계단이 비행 중에 열리지 않도록 개조되었습니다."
+    ],
+    korea: "대한항공이 1970년대부터 727을 도입해 국내선과 근거리 국제선에 사용했으나 지금은 모두 퇴역했습니다.",
+    word: { term: "T형 꼬리날개", meaning: "수평 꼬리날개를 수직 꼬리날개 맨 위에 올려놓은 구조로, 뒤쪽에 엔진을 단 비행기에서 엔진 배기 영향을 피하기 위해 쓰입니다." }
+  },
+  {
+    id: "b757", name: "보잉 757", nick: "하늘의 스포츠카", code: "B757-200", maker: "보잉", country: "미국", flag: "🇺🇸",
+    firstFlight: 1982, category: "단일통로 소형기", seats: 200, length: 47.3, wingspan: 38.0, speed: 850, range: 7250,
+    engines: 2, status: "운항 중", color: "#27ae60", emoji: "✈️",
+    mtow: 115.7, ceiling: 12800, engine: "PW2037 / RB211-535",
+    summary: "보잉 757은 단일통로 동체에 강력한 엔진 2개를 달아 힘이 좋고 가파르게 상승하는 중형 여객기입니다. 단일통로(통로가 하나인 동체) 기종이면서도 대서양을 건널 수 있을 만큼 항속거리가 길어 중거리와 장거리 노선 모두에 쓰였습니다. 2004년 생산이 끝났지만 후속 기종이 없어 지금도 일부 항공사와 화물사가 운용합니다.",
+    facts: [
+      "1983년 이스턴 항공이 처음 취항시켰고, 2004년까지 총 1,049대가 생산되었습니다.",
+      "추력 대비 무게가 높아 짧은 활주로에서도 이륙하고 같은 크기 기종보다 훨씬 가파르게 상승해 스포츠카라는 별명이 붙었습니다.",
+      "2001년 9.11 테러에서 납치된 비행기 두 대가 757이었고, 이후 조종실 문이 보강되는 등 항공 보안 규정이 바뀌었습니다."
+    ],
+    korea: "한국 항공사가 정기 여객 노선에 대량으로 쓴 기종은 아니며, 일부 화물 운용 사례가 있는 정도입니다.",
+    word: { term: "추력 대비 중량비", meaning: "엔진이 내는 힘을 비행기 무게로 나눈 값으로, 클수록 빠르게 가속하고 가파르게 상승할 수 있습니다." }
+  },
+  {
+    id: "b737max", name: "보잉 737 MAX", nick: "맥스", code: "B737 MAX 8", maker: "보잉", country: "미국", flag: "🇺🇸",
+    firstFlight: 2016, category: "단일통로 소형기", seats: 178, length: 39.5, wingspan: 35.9, speed: 839, range: 6500,
+    engines: 2, status: "운항 중", color: "#2471a3", emoji: "✈️",
+    mtow: 82.2, ceiling: 12500, engine: "LEAP-1B",
+    summary: "보잉 737 MAX 8은 오래된 737 설계에 더 크고 효율 좋은 엔진을 단 최신 개량형으로, 이전 737NG보다 연료를 약 14% 적게 씁니다. 큰 엔진을 달기 위해 앞쪽으로 더 길게 뻗은 엔진 위치가 비행 특성을 바꿨고, 이를 보정하려는 소프트웨어가 사고의 원인이 되었습니다. 이후 소프트웨어와 조종사 훈련이 개선되어 2020년 말부터 운항이 다시 허용되었습니다.",
+    facts: [
+      "2018년 10월 인도네시아 라이온에어, 2019년 3월 에티오피아항공 추락 사고로 모두 346명이 숨졌습니다.",
+      "이 사고들로 2019년 3월부터 전 세계 운항이 중단되었고, 미국 연방항공청은 2020년 11월 재운항을 승인했습니다.",
+      "엔진 뒷부분에 톱니 모양의 쉐브론 처리를 하고 끝이 갈라진 윙렛(날개 끝 보조 날개)을 달아 소음과 연료 소모를 줄였습니다."
+    ],
+    korea: "대한항공이 737-8을 도입했고, 제주항공, 티웨이항공, 이스타항공 등 저비용항공사도 MAX 계열을 운용하거나 도입했습니다.",
+    word: { term: "MCAS", meaning: "기수가 너무 들리는 것을 막으려고 센서 값에 따라 자동으로 꼬리날개를 움직여 기수를 내리는 소프트웨어입니다." }
+  },
+  {
+    id: "b7478", name: "보잉 747-8", nick: "점보의 마지막 진화형", code: "B747-8I", maker: "보잉", country: "미국", flag: "🇺🇸",
+    firstFlight: 2010, category: "쌍통로 대형기", seats: 410, length: 76.3, wingspan: 68.4, speed: 913, range: 14815,
+    engines: 4, status: "운항 중", color: "#b03a2e", emoji: "✈️",
+    mtow: 447.7, ceiling: 13100, engine: "GEnx-2B67",
+    summary: "보잉 747-8 인터콘티넨탈은 747 시리즈의 마지막 여객형으로, 이전 747-400보다 동체를 5.6m 늘리고 새 날개와 엔진을 달았습니다. 777에서 쓰던 기술을 가져와 연료 효율과 소음을 줄였고, 현존하는 가장 긴 여객기입니다. 인기는 A380에 밀려 크지 않았으며 2023년 마지막 기체가 인도되며 747 생산이 끝났습니다.",
+    facts: [
+      "전체 길이는 76.3m로 에어버스 A380보다 길어 세계에서 가장 긴 여객기입니다.",
+      "2011년 루프트한자가 처음 인도받았고, 여객형 48대와 화물형 747-8F 등 총 150여 대가 만들어졌습니다.",
+      "날개 끝을 위로 휘지 않고 비스듬히 뒤로 젖힌 레이키드 윙팁(날개 끝을 뒤로 기울인 형태)을 써 공기 저항을 줄였습니다."
+    ],
+    korea: "대한항공이 747-8i를 2015년부터 인천발 장거리 노선에 투입했고, 화물기 747-8F도 운용하고 있습니다.",
+    word: { term: "레이키드 윙팁", meaning: "날개 끝을 위로 세우는 대신 뒤쪽으로 비스듬히 뻗게 만든 형태로, 날개 끝에서 생기는 소용돌이 저항을 줄입니다." }
+  },
+  {
+    id: "b7779", name: "보잉 777X", nick: "접히는 날개", code: "B777-9", maker: "보잉", country: "미국", flag: "🇺🇸",
+    firstFlight: 2020, category: "쌍통로 대형기", seats: 426, length: 76.7, wingspan: 71.8, speed: 905, range: 13500,
+    engines: 2, status: "시험 비행 중", color: "#117a65", emoji: "✈️",
+    mtow: 351.5, ceiling: 13100, engine: "GE9X",
+    summary: "보잉 777-9는 777의 차세대형인 777X 중 가장 큰 모델로, 길이 76.7m로 쌍발기 중 가장 깁니다. 날개는 탄소섬유 복합재(탄소 섬유를 수지로 굳힌 가볍고 튼튼한 소재)로 새로 만들었고 끝부분이 접히는 구조를 갖췄습니다. 현재 비행시험과 인증 과정을 거치며 첫 인도를 앞두고 있어 아직 본격적인 상업 운항 전 단계입니다.",
+    facts: [
+      "2020년 1월 시애틀 인근 에버렛에서 첫 비행을 했으나, 인증 절차가 길어져 첫 인도 일정이 여러 번 미뤄졌습니다.",
+      "날개 폭이 71.8m라 일반 공항 게이트에 들어가지 못해, 지상에서는 끝을 3.5m씩 접어 64.8m로 줄입니다.",
+      "GE9X 엔진은 팬 지름이 약 3.4m로 현존 최대 규모이며, 2017년 세계에서 가장 큰 추력 시험 기록을 세웠습니다."
+    ],
+    korea: "국내 항공사가 운용 중인 기체는 아직 없으며, 향후 도입 여부는 항공사별 계획에 달려 있습니다.",
+    word: { term: "접이식 날개 끝", meaning: "날개 끝부분을 지상에서 위로 접어 공항 게이트 폭 제한에 맞추고, 비행 중에는 펼쳐 날개를 길게 쓰는 구조입니다." }
+  }
+];
+
+</script>
+<script>
+window.PLANES_D = [
+{ id: "a300", name: "에어버스 A300", nick: "쌍발 와이드바디의 개척자", code: "A300B4", mtow: 165, ceiling: 12000, engine: "CF6-50C2", korea: "대한항공과 아시아나항공이 1980~90년대에 A300 계열을 도입해 국내선과 근거리 국제선에 투입했으나 지금은 여객 운항에서 모두 물러났다.", maker: "에어버스", country: "유럽(프랑스 등)", flag: "🇪🇺", firstFlight: 1972, category: "쌍통로 중형기", seats: 260, length: 53.6, wingspan: 44.8, speed: 847, range: 5375, engines: 2, status: "은퇴", color: "#3b82c4", emoji: "✈️",
+  summary: "A300은 엔진 두 기를 달고도 복도가 두 개인 넓은 객실을 갖춘 세계 최초의 쌍발 와이드바디(동체가 넓어 객실에 통로가 둘인 대형 여객기) 기종이다. 영국·프랑스·독일·스페인이 힘을 합쳐 만든 에어버스의 첫 작품으로, 당시 미국 기종이 3~4기 엔진을 쓰던 시절에 엔진 수를 줄여 연료비를 아꼈다. 이후 A310과 A330 등으로 이어지는 에어버스 성공 신화의 출발점이 되었다.",
+  facts: ["1972년 10월 28일 첫 비행을 했고 1974년 에어프랑스가 처음으로 상업 운항을 시작했다.", "A300B4는 장거리용 연료 탱크를 추가한 모델로, 1979년 이후 생산된 A300-600은 승무원 2명이 조종하는 유리 조종석을 도입했다.", "2007년 마지막 여객형이 인도되었고, 화물기형 A300-600F는 UPS와 페덱스 등에서 지금도 쓰인다."],
+  word: { term: "와이드바디", meaning: "객실 안에 복도가 두 개 있을 정도로 동체 지름이 큰 여객기를 말하며, 한 번에 많은 승객과 화물을 실을 수 있다." } },
+{ id: "a330", name: "에어버스 A330", nick: "중장거리의 만능 일꾼", code: "A330-300", mtow: 242, ceiling: 12500, engine: "Trent 700", korea: "대한항공과 아시아나항공이 A330-300을 일본·동남아·중국 등 중거리 노선에 오랫동안 운용했고, 에어부산 등 저비용항공사도 도입해 쓰고 있다.", maker: "에어버스", country: "유럽(프랑스 등)", flag: "🇪🇺", firstFlight: 1992, category: "쌍통로 중형기", seats: 300, length: 63.7, wingspan: 60.3, speed: 871, range: 11750, engines: 2, status: "운항 중", color: "#0b7a9e", emoji: "✈️",
+  summary: "A330-300은 쌍발 와이드바디로 약 300석을 싣고 중거리부터 장거리까지 폭넓게 다니는 에어버스의 베스트셀러다. 한 기종을 놓고 GE, 프랫앤휘트니, 롤스로이스 중 엔진을 고를 수 있어 항공사들이 취향에 맞게 구성할 수 있었다. 최신 개량형 A330neo는 새 엔진과 날개 끝 장치로 연료를 약 25% 아껴 지금도 주문을 받고 있다.",
+  facts: ["1992년 11월 2일 첫 비행을 했고 1994년 에어인터에서 첫 상업 운항을 시작했다.", "A330neo는 롤스로이스 Trent 7000 엔진을 달고 2018년 취항했으며, 기존형보다 날개 폭이 약 4m 길어졌다.", "A330 계열은 2023년 기준 1,500대 이상 인도되어 와이드바디기 중 손꼽히는 판매량을 기록했다."],
+  word: { term: "윙렛", meaning: "날개 끝을 위로 꺾어 세운 작은 날개로, 날개 끝에서 생기는 소용돌이(유도 항력)를 줄여 연료를 아껴 준다." } },
+{ id: "a340", name: "에어버스 A340", nick: "네 발 달린 장거리 여객기", code: "A340-600", mtow: 380, ceiling: 12500, engine: "Trent 556", korea: "국내 항공사 가운데 A340-600을 정기 노선에 투입한 사례는 확인되지 않으며, 한국에서는 보기 드문 기종이다.", maker: "에어버스", country: "유럽(프랑스 등)", flag: "🇪🇺", firstFlight: 2001, category: "쌍통로 대형기", seats: 380, length: 75.4, wingspan: 63.5, speed: 905, range: 13900, engines: 4, status: "일부 운항", color: "#7c3aed", emoji: "✈️",
+  summary: "A340-600은 엔진 네 기를 달고 당시 세계에서 가장 긴 동체를 가진 여객기로, 보잉 747을 대신할 장거리 대안으로 개발되었다. 엔진이 네 기라 바다 위에서 한 기가 고장 나도 비교적 여유가 있어 쌍발기 운항 제한이 엄격하던 시절에 환영받았다. 그러나 이후 연료 효율이 좋은 대형 쌍발기(B777 등)가 등장하면서 인기가 급격히 식었다.",
+  facts: ["동체 길이 75.4m로 2000년대 초 기준 세계에서 가장 긴 여객기였으며, 후에 B747-8이 이 기록을 넘어섰다.", "최대이륙중량은 380톤이고 4기의 롤스로이스 Trent 500 엔진이 각각 약 25톤의 추력을 낸다.", "A340 계열은 2011년 생산이 종료되었고 약 380대가 인도되는 데 그쳤다."],
+  word: { term: "ETOPS", meaning: "쌍발기가 엔진 하나가 멈춰도 가장 가까운 공항까지 정해진 시간 안에 안전하게 갈 수 있도록 운항 경로를 제한하는 국제 규정이다." } },
+{ id: "a321", name: "에어버스 A321neo", nick: "단일통로의 장거리 도전자", code: "A321neo", mtow: 97, ceiling: 12100, engine: "LEAP-1A / PW1100G", korea: "아시아나항공이 A321neo를 도입해 일본·동남아 노선에 투입했고, 대한항공 그룹과 일부 저비용항공사도 도입과 주문을 이어 가고 있다.", maker: "에어버스", country: "유럽(프랑스 등)", flag: "🇪🇺", firstFlight: 2016, category: "단일통로 소형기", seats: 220, length: 44.5, wingspan: 35.8, speed: 828, range: 7400, engines: 2, status: "운항 중", color: "#e11d48", emoji: "✈️",
+  summary: "A321neo는 A320 계열 가운데 가장 큰 모델에 새 엔진을 얹은 기종으로, 좁은 통로 하나인 객실에 최대 240석가량을 배치할 수 있다. 연료 탱크를 추가한 XLR(Extra Long Range) 형은 항속 거리가 약 8,700km에 달해 대서양을 건너는 노선까지 소화한다. 덕분에 항공사들은 대형기가 비어 날아다니던 노선을 작은 기체로 효율적으로 운영할 수 있게 되었다.",
+  facts: ["2016년 처음 날았고 2018년 4월 비라이트 항공을 통해 상업 운항을 시작했다.", "A321XLR은 중앙 연료 탱크를 뒷부분에 추가해 항속 거리를 약 8,700km까지 늘렸으며 2024년 취항했다.", "최대이륙중량 97톤으로 A320neo보다 약 18톤 무겁지만 같은 조종 자격으로 운영할 수 있다."],
+  word: { term: "공통 조종 자격", meaning: "여러 기종이 조종 방식이 비슷해 한 번 받은 자격으로 조종사가 다른 기종도 조종할 수 있게 하는 제도로, 항공사의 교육비를 크게 줄여 준다." } },
+{ id: "a220", name: "에어버스 A220", nick: "캐나다에서 온 새 얼굴", code: "A220-300", mtow: 70.9, ceiling: 12500, engine: "PW1500G", korea: "대한항공이 2021년부터 A220-300을 도입해 일본·중국·동남아 노선에 투입하고 있다.", maker: "에어버스", country: "캐나다·유럽", flag: "🇪🇺", firstFlight: 2013, category: "단일통로 소형기", seats: 145, length: 38.7, wingspan: 35.1, speed: 828, range: 6300, engines: 2, status: "운항 중", color: "#16a34a", emoji: "✈️",
+  summary: "A220-300은 원래 캐나다 봄바디어가 시리즈로 개발한 CSeries 계열의 한 기종으로, 2018년 에어버스가 지분 대부분을 인수하며 이름이 바뀌었다. 약 130~150석 규모의 중소형 단일통로 여객기라서 수요가 적은 노선에서 효율이 좋고, 기어드 터보팬(팬과 터빈의 속도를 기어로 따로 맞추는 엔진)을 써서 조용하며 연료도 아낀다. 객실 폭이 넓어 같은 급 경쟁기보다 승객이 편하게 앉을 수 있다.",
+  facts: ["2013년 9월 CSeries 시제기가 첫 비행을 했고 2016년 스위스항공이 첫 상업 운항을 시작했다.", "2018년 7월 에어버스가 CSeries 프로그램을 인수했으며, 캐나다 미라벨 공장과 미국 모빌 공장에서 조립된다.", "사용하는 프랫앤휘트니 PW1500G는 기어드 터보팬 방식으로 기존 엔진 대비 연료 소비를 약 20% 줄였다."],
+  word: { term: "기어드 터보팬", meaning: "엔진 앞쪽 팬과 뒤쪽 터빈 사이에 감속 기어를 넣어 각각 가장 효율적인 속도로 돌게 만든 터보팬 엔진이다." } }
+];
+
+</script>
+<script>
 window.LEARN = {
   "forces": [
     { "name": "양력", "en": "Lift", "dir": "up", "color": "#3b82f6", "desc": "양력은 날개 위쪽의 공기가 빠르게 흐르며 압력이 낮아지는 베르누이 원리로 설명되며, 동시에 날개가 공기를 아래로 밀어내고 그 반작용으로 위로 받는 뉴턴 제3법칙의 결과이기도 하다. 양력의 크기는 날개 면적, 공기 밀도, 속도의 제곱, 그리고 기류와 날개 시위선이 이루는 받음각에 따라 달라진다.", "example": "달리는 차의 창밖으로 손바닥을 살짝 들어 올리면 손이 위로 떠오르는 느낌이 바로 양력의 원리다." },
@@ -601,7 +704,7 @@ window.LEARN = {
 /* 데이터를 못 불러와도 비지 않도록 넣어 둔 기본 플래그십 2기 */
 const FLAGSHIP_DEFAULT=[{"id":"b747","name":"보잉 747","nick":"점보","code":"B747-400","maker":"보잉","country":"미국","flag":"🇺🇸","firstFlight":1969,"category":"쌍통로 대형기","seats":416,"length":70.6,"wingspan":64.4,"speed":920,"range":13450,"engines":4,"status":"일부 운항","color":"#c0392b","emoji":"✈️","mtow":396.9,"ceiling":13700,"engine":"PW4056 / CF6-80C2","summary":"보잉 747은 1970년 취항한 세계 최초의 광동체(객실 통로가 두 개인 넓은 동체) 여객기로, 약 50년간 장거리 항공 시장을 이끌었습니다. 엔진 4개를 단 사발기(四發機)로 터보팬(대형 팬으로 공기를 밀어내 추력을 얻는 제트엔진)의 높은 효율을 활용해 대양 횡단 노선을 대중화했습니다. 2층 구조의 앞부분 덕분에 화물기와 정부 전용기로도 폭넓게 개조되었습니다.","facts":["1970년 팬암(Pan Am)이 뉴욕-런던 노선에 처음 투입했고, 이전 최대 기종인 707보다 좌석 수가 두 배 이상 많았습니다.","화물기로 전환할 것을 염두에 두고 조종석을 위층에 배치했으며, 그 결과 기수 부분이 위로 열리는 화물 적재 구조가 가능해졌습니다.","총 1,500대 이상 생산되었고, 2023년 1월 마지막 747-8이 인도되며 54년간의 생산이 끝났습니다."],"korea":"대한항공이 747-400과 최신형 747-8i를 장거리 노선과 화물 수송에 운용했고, 아시아나항공도 747-400을 운용했으나 현재는 대부분 퇴역했습니다.","word":{"term":"광동체(와이드바디)","meaning":"객실 안에 통로가 두 개 있는 폭 넓은 동체 구조로, 한 줄에 7석 이상을 배치할 수 있는 대형 여객기를 가리킵니다."}},{"id":"a380","name":"에어버스 A380","nick":"슈퍼점보","code":"A380-800","mtow":575,"ceiling":13100,"engine":"Trent 900","korea":"대한항공이 2011년부터 10대 안팎을 운용했고 아시아나항공도 6대를 도입했으나, 두 회사 모두 연료 효율 문제로 단계적으로 줄이는 추세다.","maker":"에어버스","country":"유럽(프랑스 등)","flag":"🇪🇺","firstFlight":2005,"category":"쌍통로 대형기","seats":525,"length":72.7,"wingspan":79.8,"speed":903,"range":15000,"engines":4,"status":"일부 운항","color":"#1e6fd9","emoji":"✈️","summary":"A380은 객실 전체가 위아래 두 층으로 이뤄진 세계 최대의 양산 여객기로, 최대 853명까지 인증받았다. 터보팬(공기를 빨아들여 압축·연소시켜 추력을 얻는 제트엔진) 4기를 달고 575톤에 이르는 기체를 띄우며, 이를 수용하려면 활주로와 탑승교를 별도로 갖춘 공항이 필요하다. 2021년 마지막 기체가 인도되며 생산은 끝났지만, 항공 수요가 허브 공항에 집중되던 시대를 상징하는 기종으로 평가된다.","facts":["최대이륙중량 575톤으로, 날개 폭이 79.8m여서 일반 활주로 유도로를 그대로 쓰기 어려워 공항 시설을 개조해야 했다.","2007년 싱가포르항공이 첫 상업 운항을 시작했고, 2021년까지 총 251대가 인도되었다.","날개 앞전부터 동체까지 이어지는 대형 복합재 구조를 써서 기체 무게의 약 25%를 복합재로 채웠다."],"word":{"term":"이중 갑판","meaning":"객실이 위아래 두 층으로 나뉜 구조로, 같은 길이의 동체에서 바닥 면적을 크게 늘리는 설계 방식이다."}}];
 const FLAGSHIP_IDS=['b747','a380'];
-let PLANES=[...(window.PLANES_A||[]),...(window.PLANES_B||[])];
+let PLANES=[...(window.PLANES_A||[]),...(window.PLANES_C||[]),...(window.PLANES_B||[]),...(window.PLANES_D||[])];
 if(!PLANES.length)PLANES=FLAGSHIP_DEFAULT.slice();
 const L=window.LEARN||{forces:[],parts:[],journey:[],quiz:[],history:[]};
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
@@ -613,7 +716,8 @@ function spec(p){
   const Lf=p.length,W=p.wingspan,c=p.category||'',id=p.id;
   const sup=c==='초음속기',prop=c==='프로펠러기',wide=c.indexOf('쌍통로')===0,reg=c==='지역 제트기';
   const R=id==='a380'?3.55:wide?2.85:reg?1.5:prop?1.35:sup?1.45:1.95;
-  const s={L:Lf,W,R,sup,prop,wide,id,high:id==='atr72',ttail:id==='atr72',eng:p.engines||2};
+  const rear=id==='b727';
+  const s={L:Lf,W,R,sup,prop,wide,id,rear,high:id==='atr72',ttail:id==='atr72'||rear,eng:p.engines||2};
   s.nL=sup?0.16*Lf:2.3*R; s.tL=(sup?0.12:prop?0.3:0.24)*Lf;
   s.sweep=sup?0:prop?(id==='dc3'?0.15:0.03):id==='b707'?0.68:0.58;
   s.leX=(prop?0.62:0.6)*Lf; s.cr=(prop?0.16:0.2)*Lf; s.ct=s.cr*(prop?0.45:0.27);
@@ -627,6 +731,7 @@ function spec(p){
     s.hstab=[[hLE+sh,0],[hLE-hs*hsw+sh,hs],[hLE-hs*hsw-hcr*0.45+sh,hs],[hLE-hcr+sh,0]];}
   s.eR=sup?0.6:prop?R*0.42:R*0.47; s.nl=prop?s.eR*5.5:s.eR*3.6;
   s.engZ=sup?[R+1.3,R+2.7]:(s.eng>=4?[0.37*W/2,0.66*W/2]:[(prop?0.34:0.33)*W/2]);
+  if(rear){s.engZ=[];s.rearX=0.15*Lf;s.eR=R*0.42;s.nl=s.eR*4.2}
   return s;
 }
 const rAt=(s,x)=>{if(x>=s.L)return 0;if(x>s.L-s.nL){const u=(s.L-x)/s.nL;return s.R*(s.sup?Math.pow(u,.85):Math.sqrt(u*(2-u)))}
@@ -648,6 +753,7 @@ function topGroup(p,o={}){
   for(const z of s.engZ)for(const m of[1,-1]){
     if(s.sup)g+=`<rect x="${0.03*s.L}" y="${m*z-0.7}" width="${0.2*s.L}" height="1.4" rx=".4" fill="${o.eng||'#8e9bb5'}" stroke="${st}" stroke-width="${sw}"/>`;
     else{const cx=engX(s,z);g+=`<rect x="${cx-s.nl/2}" y="${m*z-s.eR}" width="${s.nl}" height="${s.eR*2}" rx="${s.eR*.6}" fill="${o.eng||'#8e9bb5'}" stroke="${st}" stroke-width="${sw}"/><rect x="${cx+s.nl/2-s.nl*.12}" y="${m*z-s.eR}" width="${s.nl*.12}" height="${s.eR*2}" rx="${s.eR*.3}" fill="${acc}"/>`}}
+  if(s.rear)for(const m of[1,-1]){const cx=s.rearX,zc=m*(rAt(s,cx)+s.eR*.95);g+=`<rect x="${cx-s.nl/2}" y="${zc-s.eR}" width="${s.nl}" height="${s.eR*2}" rx="${s.eR*.6}" fill="${o.eng||'#8e9bb5'}" stroke="${st}" stroke-width="${sw}"/><rect x="${cx+s.nl/2-s.nl*.12}" y="${zc-s.eR}" width="${s.nl*.12}" height="${s.eR*2}" rx="${s.eR*.3}" fill="${acc}"/>`}
   g+=`<polygon points="${poly(pts)}" ${attr}/>`;
   g+=`<rect x="${0.02*s.L}" y="-0.2" width="${0.21*s.L}" height=".4" fill="${acc}"/>`;
   g+=`<path d="M${s.L-s.nL*.55},${-s.R*.35} Q${s.L-s.nL*.25},0 ${s.L-s.nL*.55},${s.R*.35}" stroke="#0b1430" stroke-width="${s.R*.18}" fill="none"/>`;
@@ -684,6 +790,9 @@ function sideGroup(p,o={}){
     if(!bp)g+=`<rect x="${cx+s.nl/2-s.nl*.14}" y="${ey-s.eR}" width="${s.nl*.14}" height="${s.eR*2}" rx="${s.eR*.4}" fill="${acc}"/>`;
     if(s.prop)g+=`<ellipse cx="${cx+s.nl/2+.2}" cy="${ey}" rx=".25" ry="${s.W*.07}" fill="#ffffff55"><animate attributeName="ry" values="${s.W*.07};${s.W*.01};${s.W*.07}" dur=".12s" repeatCount="indefinite"/></ellipse>`;
   }
+  if(s.rear){const cx=s.rearX,ey=-upAt(s,cx)-s.R*.35;
+    g+=`<rect x="${cx-s.nl/2}" y="${ey-s.eR}" width="${s.nl}" height="${s.eR*2}" rx="${s.eR*.7}" fill="${bp?F:'#9aa6bf'}" stroke="${S}" stroke-width="${SW}"/>`;
+    if(!bp)g+=`<rect x="${cx+s.nl/2-s.nl*.14}" y="${ey-s.eR}" width="${s.nl*.14}" height="${s.eR*2}" rx="${s.eR*.4}" fill="${acc}"/>`}
   const minY=-s.R*.55-s.fh-1,maxY=s.R+(o.gear?3:1.6);
   return {g,s,minY,maxY,wy};
 }
@@ -705,7 +814,7 @@ function build3D(p){
     const ge=new T.ExtrudeGeometry(sh,{depth:th,bevelEnabled:true,bevelThickness:th*.35,bevelSize:th*.35,bevelSegments:2,steps:1});ge.rotateX(Math.PI/2);ge.translate(0,th/2,0);return new T.Mesh(ge,mat)};
   const wy=s.high?s.R*.85:-s.R*.5,th=Math.max(.18,s.R*.11),dih=s.high?.015:.06;
   for(const m of[1,-1]){const w=slab(s.wing,th,white,m<0);w.position.y=wy;w.rotation.x=-m*dih;inner.add(w);
-    if(!s.sup&&!s.prop&&p.firstFlight>1985&&s.id!=='b787'&&s.id!=='b777'){const tip=s.wing[1],wl=new T.Mesh(new T.BoxGeometry(s.ct*.8,s.R*.9,.1),acc);wl.position.set(tip[0]-s.ct*.45,wy+s.R*.45+(tip[1])*Math.sin(dih),m*tip[1]);wl.rotation.z=.35;inner.add(wl)}}
+    if(!s.sup&&!s.prop&&p.firstFlight>1985&&!['b787','b777','b7779','b7478','a220'].includes(s.id)){const tip=s.wing[1],wl=new T.Mesh(new T.BoxGeometry(s.ct*.8,s.R*.9,.1),acc);wl.position.set(tip[0]-s.ct*.45,wy+s.R*.45+(tip[1])*Math.sin(dih),m*tip[1]);wl.rotation.z=.35;inner.add(wl)}}
   // fin
   {const sh=new T.Shape(s.fin.map(([a,b])=>new T.Vector2(a,b)));const ge=new T.ExtrudeGeometry(sh,{depth:.26,bevelEnabled:true,bevelThickness:.08,bevelSize:.08,bevelSegments:1});ge.translate(0,0,-.13);
    const fm=new T.Mesh(ge,acc);fm.position.y=s.R*.55+upAt(s,0.1*s.L)*.85;inner.add(fm);
@@ -727,14 +836,21 @@ function build3D(p){
   // windows
   const wins=[];const step=Math.max(.95,s.L/75);
   for(let x=s.tL+.8;x<s.L-s.nL-.5;x+=step){wins.push([x,s.R*.28,.968]);if(s.id==='a380')wins.push([x,s.R*.66,.75])}
-  if(s.id==='b747')for(let x=s.L-s.nL-s.L*.28;x<s.L-s.nL;x+=step)wins.push([x,s.R*.66,.75]);
+  if(s.id.startsWith('b747'))for(let x=s.L-s.nL-s.L*.28;x<s.L-s.nL;x+=step)wins.push([x,s.R*.66,.75]);
   const im=new T.InstancedMesh(new T.BoxGeometry(Math.min(.32,step*.4),s.R*.15,.12),dark,wins.length*2);
   const mx=new T.Matrix4();let k=0;for(const [x,y,zf] of wins)for(const m of[1,-1]){mx.makeTranslation(x,y,m*s.R*zf);im.setMatrixAt(k++,mx)}inner.add(im);
   // cheatline + windscreen
   for(const m of[1,-1]){const cl=new T.Mesh(new T.BoxGeometry(s.L-s.nL-s.tL,s.R*.07,.06),acc);cl.position.set((s.L-s.nL+s.tL)/2,s.R*.05,m*s.R*.995);inner.add(cl)}
   {const x=s.L-s.nL*.6,r=rAt(s,x);const ws=new T.Mesh(new T.BoxGeometry(s.nL*.28,r*.22,r*1.25),dark);ws.position.set(x,r*.62,0);ws.rotation.z=-.42;inner.add(ws)}
   // hump for 747
-  if(s.id==='b747'){const hg=new T.SphereGeometry(1,32,16,0,Math.PI*2,0,Math.PI/2);hg.scale(s.L*.17,s.R*.42,s.R*.78);const h=new T.Mesh(hg,white);h.position.set(s.L-s.nL-s.L*.1,s.R*.62,0);inner.add(h)}
+  if(s.id.startsWith('b747')){const hg=new T.SphereGeometry(1,32,16,0,Math.PI*2,0,Math.PI/2);hg.scale(s.L*(s.id==='b7478'?.21:.17),s.R*.42,s.R*.78);const h=new T.Mesh(hg,white);h.position.set(s.L-s.nL-s.L*.1,s.R*.62,0);inner.add(h)}
+  // 727: 꼬리 쪽 엔진 3개 (좌우 2개 + 동체 위 1개)
+  if(s.rear){const cx=s.rearX,u=upAt(s,cx),r=rAt(s,cx);
+    const pods=[[r+s.eR*.95,u+s.R*.3],[-(r+s.eR*.95),u+s.R*.3],[0,u+r+s.eR*.55]];
+    for(const [zz,ey] of pods){const nac=new T.Mesh(new T.CylinderGeometry(s.eR,s.eR*.8,s.nl,32),grey);nac.rotation.z=Math.PI/2;nac.position.set(cx,ey,zz);inner.add(nac);
+      const lip=new T.Mesh(new T.TorusGeometry(s.eR*.93,s.eR*.09,12,32),acc);lip.rotation.y=Math.PI/2;lip.position.set(cx+s.nl/2,ey,zz);inner.add(lip);
+      const fan=new T.Mesh(new T.CircleGeometry(s.eR*.9,32),dark);fan.rotation.y=Math.PI/2;fan.position.set(cx+s.nl/2-.05,ey,zz);inner.add(fan);
+      if(zz!==0){const py=new T.Mesh(new T.BoxGeometry(s.nl*.5,.2,Math.abs(zz)-r*.6),white);py.position.set(cx,ey,zz/2+Math.sign(zz)*r*.3);inner.add(py)}}}
   inner.position.set(-s.L/2,0,0);
   g.scale.setScalar(11/Math.max(s.L,s.W));
   return g;
@@ -782,7 +898,8 @@ const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.targ
 function observe(){$$('.reveal:not(.show)').forEach(el=>io.observe(el))}
 
 /* ---------- HERO ---------- */
-const heroIds=['b747','a380','b787','concorde','a350','atr72'].filter(byId);
+const heroIds=['b747','a380','b7779','b787','a350','b727','concorde'].filter(byId);
+$('#nPlanes').textContent=PLANES.length;
 const hv=makeViewer($('#heroCv'),{cam:[14,3.2,17.5],look:innerWidth>900?[-4.2,-1.6,0]:[0,-2.2,0],clouds:true,yaw0:-.25});
 let roT=0,roTarget={spd:0,alt:0};
 function heroSet(id){const p=byId(id);if(!p)return;$$('.mbtn').forEach(b=>b.classList.toggle('on',b.dataset.id===id));
@@ -797,18 +914,22 @@ setInterval(()=>{cs.spd+=(roTarget.spd-cs.spd)*.12+(Math.random()-.5)*2;cs.alt+=
   $('#roSpd').textContent=Math.round(cs.spd)+' KM/H';$('#roAlt').textContent=fmt(Math.round(cs.alt/10)*10);$('#roHdg').textContent=String(Math.round(cs.hdg)).padStart(3,'0')+'°'},120);
 
 /* ---------- FLEET ---------- */
+const makerOf=p=>(p.maker||'').includes('보잉')?'보잉':(p.maker||'').includes('에어버스')?'에어버스':'기타';
+const MK=[['전체','ALL'],['보잉','BOEING'],['에어버스','AIRBUS'],['기타','OTHERS']];let mk='전체';
+$('#mchips').innerHTML=MK.map(([k,en])=>`<button class="chip mk${k==='전체'?' on':''}" data-m="${k}"><b class="hud" style="margin-right:6px">${en}</b>${k} ${k==='전체'?PLANES.length:PLANES.filter(p=>makerOf(p)===k).length}</button>`).join('');
+$('#mchips').onclick=e=>{const b=e.target.closest('.chip');if(!b)return;mk=b.dataset.m;$$('#mchips .chip').forEach(x=>x.classList.toggle('on',x===b));render()};
 const cats=['전체',...new Set(PLANES.map(p=>p.category))];let cat='전체';
 $('#chips').innerHTML=cats.map(c=>`<button class="chip${c==='전체'?' on':''}" data-c="${c}">${c}</button>`).join('');
 $('#chips').onclick=e=>{const b=e.target.closest('.chip');if(!b)return;cat=b.dataset.c;$$('#chips .chip').forEach(x=>x.classList.toggle('on',x===b));render()};
 $('#q').oninput=render;$('#sort').onchange=render;
 const stc=s=>s==='운항 중'?'live':s==='은퇴'?'ret':'part';
-const stEn=s=>s==='운항 중'?'IN SERVICE':s==='은퇴'?'RETIRED':'LIMITED';
+const stEn=s=>s==='운항 중'?'IN SERVICE':s==='은퇴'?'RETIRED':s==='시험 비행 중'?'FLIGHT TEST':'LIMITED';
 function tilt(el){el.addEventListener('pointermove',e=>{const b=el.getBoundingClientRect(),x=(e.clientX-b.left)/b.width,y=(e.clientY-b.top)/b.height;
   el.style.transform=`rotateY(${(x-.5)*18}deg) rotateX(${(.5-y)*14}deg) translateZ(10px)`;el.style.setProperty('--mx',x*100+'%');el.style.setProperty('--my',y*100+'%')});
   el.addEventListener('pointerleave',()=>el.style.transform='')}
 function render(){
   const q=$('#q').value.trim().toLowerCase(),k=$('#sort').value;
-  const list=PLANES.filter(p=>(cat==='전체'||p.category===cat)&&(!q||[p.name,p.nick,p.maker,p.code,p.country].join(' ').toLowerCase().includes(q)))
+  const list=PLANES.filter(p=>(mk==='전체'||makerOf(p)===mk)&&(cat==='전체'||p.category===cat)&&(!q||[p.name,p.nick,p.maker,p.code,p.country].join(' ').toLowerCase().includes(q)))
     .sort((a,b)=>{if(k==='flagship'){const fa=FLAGSHIP_IDS.indexOf(a.id),fb=FLAGSHIP_IDS.indexOf(b.id);
       if(fa!==fb)return (fa<0?99:fa)-(fb<0?99:fb);return a.firstFlight-b.firstFlight}
       return k==='firstFlight'?a.firstFlight-b.firstFlight:(b[k]||0)-(a[k]||0)});
@@ -845,7 +966,8 @@ $('#mclose').onclick=closeM;$('#modal').onclick=e=>{if(e.target.id==='modal')clo
 render();
 
 /* ---------- SCALE ---------- */
-const opts=PLANES.map(p=>`<option value="${p.id}">${p.code||''} · ${p.name}</option>`).join('');
+const opts=['보잉','에어버스','기타'].map(k=>{const g=PLANES.filter(p=>makerOf(p)===k).sort((a,b)=>a.firstFlight-b.firstFlight);
+  return g.length?`<optgroup label="${k}">${g.map(p=>`<option value="${p.id}">${p.code||''} · ${p.name}</option>`).join('')}</optgroup>`:''}).join('');
 $('#ca').innerHTML=opts;$('#cb').innerHTML=opts;
 $('#ca').value=byId('b747')?'b747':PLANES[0].id;$('#cb').value=byId('a380')?'a380':(PLANES[1]||PLANES[0]).id;
 function cmp(){const a=byId($('#ca').value),b=byId($('#cb').value);if(!a||!b)return;
